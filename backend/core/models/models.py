@@ -1,24 +1,51 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from core.extensions import db,bcrypt
+from core.utils.exceptions import ValidationError
 
 class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(10), nullable=False)
+    phone_number = db.Column(db.String(13), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
     profile_picture = db.Column(db.String(255))
     role = db.Column(db.String(7), nullable=False)
     is_archived = db.Column(db.Boolean, nullable=False, default=False)
     __table_args__ = (
-        db.CheckConstraint("length(phone_number)=10", name="phone_length_check"),
+        db.CheckConstraint("length(phone_number)=13", name="phone_length_check"),
         db.CheckConstraint("role IN ('admin','doctor','patient')", name="role_check"),
     )
     doctor = db.relationship('Doctor', backref='user', uselist=False)
     patient = db.relationship('Patient', backref='user', uselist=False)
+    
+    @property
+    def password(self):
+        raise ValidationError("Access to the password is prohibited.")
+    
+    @password.setter
+    def password(self,plain_text):
+        self.password_hash = bcrypt.generate_password_hash(plain_text).decode('utf-8')
+    
+    def check_password(self,plain_text):
+        return bcrypt.check_password_hash(self.password_hash,plain_text)
+
+    def to_dict(self, include_doctor=False, include_patient=False):
+        data = {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "phone_number": self.phone_number,
+            "full_name": self.full_name,
+            "profile_picture": self.profile_picture,
+            "role": self.role,
+            "is_archived": self.is_archived
+        }
+        if include_doctor and self.doctor:
+            data["doctor"] = self.doctor.to_dict(include_user=False)
+        if include_patient and self.patient:
+            data["patient"] = self.patient.to_dict(include_user=False)
+        return data
 
 class Department(db.Model):
     __tablename__ = "department"
@@ -27,6 +54,17 @@ class Department(db.Model):
     department_description = db.Column(db.Text, nullable=False)
     is_archived = db.Column(db.Boolean, nullable=False, default=False)
     doctors = db.relationship('Doctor', backref='department')
+
+    def to_dict(self, include_doctors=False):
+        data = {
+            "department_id": self.department_id,
+            "department_name": self.department_name,
+            "department_description": self.department_description,
+            "is_archived": self.is_archived
+        }
+        if include_doctors:
+            data["doctors"] = [doctor.to_dict(include_department=False, include_user=True) for doctor in self.doctors]
+        return data
 
 class Doctor(db.Model):
     __tablename__ = "doctor"
@@ -40,6 +78,28 @@ class Doctor(db.Model):
     availabilities = db.relationship('Availability', backref='doctor')
     slots = db.relationship('Slot', backref='doctor')
     appointments = db.relationship('Appointment', backref='doctor')
+
+    def to_dict(self, include_user=False, include_department=False, include_availabilities=False, include_slots=False, include_appointments=False):
+        data = {
+            "doctor_id": self.doctor_id,
+            "user_id": self.user_id,
+            "department_id": self.department_id,
+            "license_number": self.license_number,
+            "qualifications": self.qualifications,
+            "practice_start_date": self.practice_start_date.isoformat(),
+            "fees": float(self.fees)
+        }
+        if include_user:
+            data["user"] = self.user.to_dict(include_doctor=False)
+        if include_department:
+            data["department"] = self.department.to_dict(include_doctors=False)
+        if include_availabilities:
+            data["availabilities"] = [availability.to_dict() for availability in self.availabilities]
+        if include_slots:
+            data["slots"] = [slot.to_dict() for slot in self.slots]
+        if include_appointments:
+            data["appointments"] = [appointment.to_dict(include_doctor=False) for appointment in self.appointments]
+        return data
 
 class Patient(db.Model):
     __tablename__ = "patient"
@@ -55,6 +115,21 @@ class Patient(db.Model):
     )
     appointments = db.relationship('Appointment', backref='patient')
 
+    def to_dict(self, include_user=False, include_appointments=False):
+        data = {
+            "patient_id": self.patient_id,
+            "user_id": self.user_id,
+            "dob": self.dob.isoformat(),
+            "gender": self.gender,
+            "address": self.address,
+            "pincode": self.pincode
+        }
+        if include_user:
+            data["user"] = self.user.to_dict(include_patient=False)
+        if include_appointments:
+            data["appointments"] = [appointment.to_dict(include_patient=False) for appointment in self.appointments]
+        return data
+
 class Availability(db.Model):
     __tablename__ = "availability"
     availability_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -65,6 +140,15 @@ class Availability(db.Model):
     __table_args__ = (
         db.CheckConstraint("week_day IN ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')", name="availability_weekday_check"),
     )
+
+    def to_dict(self):
+        return {
+            "availability_id": self.availability_id,
+            "doctor_id": self.doctor_id,
+            "week_day": self.week_day,
+            "forenoon_slot": self.forenoon_slot,
+            "afternoon_slot": self.afternoon_slot
+        }
 
 class Slot(db.Model):
     __tablename__ = "slot"
@@ -79,6 +163,18 @@ class Slot(db.Model):
     )
     appointments = db.relationship('Appointment', backref='slot')
 
+    def to_dict(self, include_appointments=False):
+        data = {
+            "slot_id": self.slot_id,
+            "doctor_id": self.doctor_id,
+            "week_day": self.week_day,
+            "slot_time": self.slot_time.isoformat(),
+            "status": self.status
+        }
+        if include_appointments:
+            data["appointments"] = [appointment.to_dict() for appointment in self.appointments]
+        return data
+
 class Appointment(db.Model):
     __tablename__ = "appointment"
     appointment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -92,6 +188,23 @@ class Appointment(db.Model):
     )
     treatment = db.relationship('Treatment', backref='appointment', uselist=False)
 
+    def to_dict(self, include_doctor=False, include_patient=False, include_treatment=False):
+        data = {
+            "appointment_id": self.appointment_id,
+            "patient_id": self.patient_id,
+            "doctor_id": self.doctor_id,
+            "slot_id": self.slot_id,
+            "appointment_date": self.appointment_date.isoformat(),
+            "status": self.status
+        }
+        if include_doctor:
+            data["doctor"] = self.doctor.to_dict(include_appointments=False)
+        if include_patient:
+            data["patient"] = self.patient.to_dict(include_appointments=False)
+        if include_treatment and self.treatment:
+            data["treatment"] = self.treatment.to_dict()
+        return data
+
 class Treatment(db.Model):
     __tablename__ = "treatment"
     treatment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -102,7 +215,18 @@ class Treatment(db.Model):
     medicines = db.Column(db.Text, nullable=False)
     notes = db.Column(db.Text, nullable=False)
 
-admin_data = ("ramkumar", "RamKumar9", "ramkumar@gmail.com", "9999999999", "Ram Kumar", "admin")
+    def to_dict(self):
+        return {
+            "treatment_id": self.treatment_id,
+            "appointment_id": self.appointment_id,
+            "tests": self.tests,
+            "diagnosis": self.diagnosis,
+            "prescription": self.prescription,
+            "medicines": self.medicines,
+            "notes": self.notes
+        }
+
+admin_data = ("ramkumar", "RamKumar9", "ramkumar@example.com", "+915555555555", "Ram Kumar", "admin")
 def create_admin(admin_data = admin_data):
     if not User.query.filter_by(username=admin_data[0]).first():
         new_admin = User(

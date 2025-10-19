@@ -7,9 +7,9 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS user(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(25) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(10) NOT NULL CHECK(length(phone_number)=10),
+    phone_number VARCHAR(13) NOT NULL CHECK(length(phone_number)=13),
     full_name VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(255),
     role VARCHAR(7) NOT NULL CHECK(role IN ('admin','doctor','patient')),
@@ -100,11 +100,6 @@ CREATE TABLE IF NOT EXISTS treatment(
     FOREIGN KEY(appointment_id) REFERENCES appointment(appointment_id)
 )
 ''')
-
-admin_data = ("ramkumar", "RamKumar9", "ramkumar@gmail.com", "9999999999", "Ram Kumar", "admin")
-cursor.execute(
-    "INSERT OR IGNORE INTO user (username,password,email,phone_number,full_name,role) VALUES (?,?,?,?,?,?)", admin_data
-)
 
 conn.commit()
 cursor.close()
