@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import store from "@/store"
-import Login from "@/views/main_views/login.vue";
-import RegisterPatient from "@/views/patient_views/register-patient.vue";
+
+import mainRoutes from "@/router/main-routes";
+import adminRoutes from "@/router/admin-routes";
 
 const routes = [
-  { path: "/", redirect: "/login" },
-  { path: "/login", component: Login },
-  { path: "/patient/register", component: RegisterPatient }
+  ...mainRoutes,
+  ...adminRoutes,
 ];
 
 const router = createRouter({
@@ -16,15 +16,33 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = store.state.isAuthenticated
+  const role = store.state.user.role
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next("/login")
   } else if (to.path === "/login" && isAuthenticated) {
-    // next("/dashboard")
-    next("/login")
+    if (role === "admin") {
+      next("/admin")
+    } else if (role === "doctor") {
+      next("/doctor")
+    } else if (role === "patient") {
+      next("/patient")
+    } else {
+      next("/")
+    }
+  } else if (to.path.startsWith("/admin") && role !== "admin") {
+    next("/")
+  } else if (to.path.startsWith("/doctor") && role !== "doctor") {
+    next("/")
+  } else if (to.path.startsWith("/patient") && role !== "patient") {
+    next("/")
   } else {
     next()
   }
 })
+router.afterEach(() => {
+  document.body.style.overflow = "";
+  document.body.style.paddingRight = "";
+});
 
 export default router

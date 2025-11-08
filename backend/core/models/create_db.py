@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS department(
     department_id INTEGER PRIMARY KEY AUTOINCREMENT,
     department_name VARCHAR(100) UNIQUE NOT NULL,
     department_description TEXT NOT NULL,
-    is_archived BOOLEAN NOT NULL DEFAULT 0
+    hod_id INTEGER,
+    is_archived BOOLEAN NOT NULL DEFAULT 0,
+    FOREIGN KEY(hod_id) REFERENCES doctor(doctor_id)
 )
 ''')
 

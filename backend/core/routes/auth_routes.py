@@ -15,7 +15,7 @@ def login():
         return jsonify({"access_token":access_token, "refresh_token":refresh_token, "user":user.to_dict()}),200
     except (ValidationError,NotFoundError,MissingFieldsError) as e:
         return e.get_response()
-    except Exception as e:
+    except Exception:
         return jsonify({"message":"Something went wrong. Please try again later."}),500
 
 @auth_bp.route('/refresh', methods=['POST'])

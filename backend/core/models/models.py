@@ -52,18 +52,22 @@ class Department(db.Model):
     department_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     department_name = db.Column(db.String(100), unique=True, nullable=False)
     department_description = db.Column(db.Text, nullable=False)
+    hod_id = db.Column(db.Integer, db.ForeignKey("doctor.doctor_id"))
     is_archived = db.Column(db.Boolean, nullable=False, default=False)
-    doctors = db.relationship('Doctor', backref='department')
+    hod = db.relationship('Doctor', foreign_keys=[hod_id], post_update=True, uselist=False)
+    doctors = db.relationship('Doctor', backref='department', foreign_keys="Doctor.department_id")
 
     def to_dict(self, include_doctors=False):
         data = {
             "department_id": self.department_id,
             "department_name": self.department_name,
             "department_description": self.department_description,
-            "is_archived": self.is_archived
+            "hod_id": self.hod_id,
+            "is_archived": self.is_archived,
+            "hod_name": self.hod.user.full_name if self.hod else None
         }
         if include_doctors:
-            data["doctors"] = [doctor.to_dict(include_department=False, include_user=True) for doctor in self.doctors]
+            data["doctors"] = [doctor.to_dict(include_department=False, include_user=True) for doctor in self.doctors if not doctor.user.is_archived]
         return data
 
 class Doctor(db.Model):
@@ -226,7 +230,7 @@ class Treatment(db.Model):
             "notes": self.notes
         }
 
-admin_data = ("ramkumar", "RamKumar9", "ramkumar@example.com", "+915555555555", "Ram Kumar", "admin")
+admin_data = ("ramkumar", "Ram&Kumar9", "ramkumar@example.com", "+915555555555", "Ram Kumar", "admin")
 def create_admin(admin_data = admin_data):
     if not User.query.filter_by(username=admin_data[0]).first():
         new_admin = User(

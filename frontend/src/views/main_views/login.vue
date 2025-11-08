@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <login-form/>
-  </div>
+    <div>
+        <LoginForm/>
+    </div>
 </template>
 
 <script>
@@ -11,6 +11,3 @@
         components: {LoginForm,},
     };
 </script>
-
-<style scoped>
-</style>
