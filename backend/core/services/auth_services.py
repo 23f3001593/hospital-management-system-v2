@@ -9,7 +9,7 @@ class AuthServices:
             raise MissingFieldsError("All fields are required.")
         if not all([data['username'],data['password']]):
             raise MissingFieldsError("All fields are required.")
-        user = User.query.filter_by(username=data['username']).first()
+        user = User.query.filter_by(username=data['username'], is_archived=False).first()
         if not user:
             raise NotFoundError("Invalid username or password.")
         if not user.check_password(data['password']):

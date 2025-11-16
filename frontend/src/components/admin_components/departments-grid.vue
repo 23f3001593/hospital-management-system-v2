@@ -356,7 +356,7 @@
                 this.form.department_description = "";
                 this.clearAllErrors();
                 this.$nextTick(() => {
-                    this.handleScrollLock();
+                    handleScrollLock([this.showCreateDepartmentModal, this.showReadDepartmentModal, this.showUpdateDepartmentModal, this.showDeleteDepartmentModal]);
                 });
             },
             openReadDepartmentModal(department) {
@@ -382,7 +382,7 @@
                 this.form.hod_id = "";
                 this.clearAllErrors();
                 this.$nextTick(() => {
-                    this.handleScrollLock();
+                    handleScrollLock([this.showCreateDepartmentModal, this.showReadDepartmentModal, this.showUpdateDepartmentModal, this.showDeleteDepartmentModal]);
                 });
             },
             openDeleteDepartmentModal(department) {
@@ -394,7 +394,7 @@
                 this.selectedDepartment = null;
                 this.errorMessage = "";
                 this.$nextTick(() => {
-                    this.handleScrollLock();
+                    handleScrollLock([this.showCreateDepartmentModal, this.showReadDepartmentModal, this.showUpdateDepartmentModal, this.showDeleteDepartmentModal]);
                 });
             },
             clearAllErrors() {
@@ -420,12 +420,12 @@
     }
     .description-text {
         display: -webkit-box;
-        -webkit-line-clamp: 2; /* limits to 3 lines */
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        line-height: 1.5; /* adjust spacing */
-        max-height: calc(1.5em * 3); /* optional: ensures height consistency */
+        line-height: 1.5;
+        max-height: calc(1.5em * 3);
     }
     .modal-header .btn-close {
         filter: invert(1) brightness(200%);

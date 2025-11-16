@@ -1,14 +1,17 @@
 <template>
     <div class="container my-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 class="mb-0 fw-bold">{{ title }}</h2>
-            <input type="text" v-model="searchQuery" class="form-control" placeholder="Type to search..."/>
+            <div class="input-group search-bar">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" v-model="searchQuery" class="form-control" placeholder="Type to search..."/>
+            </div>
         </div>
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 text-center">
-                        <thead class="align-middle">
+                    <table class="table table-striped table-hover mb-0 text-center align-middle">
+                        <thead>
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Username</th>
@@ -165,8 +168,9 @@
             },
             formatDob(dob) {
                 if (!dob) return "";
-                const [year, month, day] = dob.split("-");
-                return `${day}-${month}-${year}`;
+                const date = new Date(dob);
+                const options = { day: '2-digit', month: 'long', year: 'numeric' };
+                return date.toLocaleDateString('en-GB', options);
             },
             formatAge(dob) {
                 if (!dob) return "";
@@ -226,8 +230,13 @@
 </script>
 
 <style scoped>
-    input.form-control {
-        max-width: 400px;
+    .search-bar {
+        width: 100%;
+        width: 300px;
+    }
+    .input-group .form-control{
+        outline: none !important;
+        box-shadow: none !important;
     }
     .modal-header .btn-close {
         filter: invert(1) brightness(200%);

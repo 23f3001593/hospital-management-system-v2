@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal,InvalidOperation
 from core.extensions import db
-from core.models.models import User,Department,Doctor,Patient,Appointment
+from core.models.models import User,Department,Doctor,Patient,Availability,Slot,Appointment
 from core.utils.exceptions import ValidationError,NotFoundError,AlreadyExistError,MissingFieldsError
 
 class AdminServices:
@@ -16,8 +16,10 @@ class AdminServices:
         admin = User.query.filter_by(role='admin').first()
         if not data:
             raise MissingFieldsError("All fields are required.")
-        if not all([data['full_name'], data['phone_number'], data['email'], data['username']]):
+        if not all([data['full_name'], data['phone_number'], data['email'], data['username'], data['current_password']]):
             raise MissingFieldsError("All fields are required.")
+        if not admin.check_password(data['current_password']):
+            raise ValidationError("Invalid Password.")
         if not data['phone_number'][3:].isdigit() or len(data['phone_number']) != 13:
             raise ValidationError("Phone Number must be a 10-digit number.")
         if len(data['username']) > 25:
@@ -32,8 +34,8 @@ class AdminServices:
         admin.email = data['email']
         admin.phone_number = data['phone_number']
         admin.full_name = data['full_name']
-        if data['password']:
-            admin.password = data['password']
+        if data['new_password']:
+            admin.password = data['new_password']
         db.session.commit()
         return {"message":"Profile updated successfully."}
 
@@ -143,12 +145,24 @@ class AdminServices:
             raise AlreadyExistError("Doctor with same License Number already exists.")
         new_user = User(username=data['username'], password=data['password'], email=data['email'], phone_number=data['phone_number'], full_name=data['full_name'], role='doctor')
         db.session.add(new_user)
-        db.session.commit()
+        db.session.flush()
         new_doctor = Doctor(user_id=new_user.id, department_id=department_id, license_number=data['license_number'], qualifications=data['qualifications'], practice_start_date=practice_start_date, fees=fees)
         db.session.add(new_doctor)
+        db.session.flush()
+        week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        for day in week_days:
+            availability = Availability(doctor_id=new_doctor.doctor_id, week_day=day, forenoon_slot=False, afternoon_slot=False)
+            db.session.add(availability)
+        db.session.flush()
+        slot_times = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
+        for day in week_days:
+            for time_str in slot_times:
+                slot_time = datetime.strptime(time_str, "%H:%M").time()
+                slot = Slot(doctor_id=new_doctor.doctor_id, week_day=day, slot_time=slot_time)
+                db.session.add(slot)
         db.session.commit()
         return {"message":"Doctor created successfully."}
-    
+
     @staticmethod
     def all_doctors():
         doctors = Doctor.query.filter(Doctor.user.has(is_archived=False)).all()

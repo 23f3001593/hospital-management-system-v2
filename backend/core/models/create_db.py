@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS doctor(
     qualifications TEXT NOT NULL,
     practice_start_date DATE NOT NULL,
     fees NUMERIC NOT NULL,
+    is_availability_updated BOOLEAN NOT NULL DEFAULT 0,
     FOREIGN KEY(user_id) REFERENCES user(id),
     FOREIGN KEY(department_id) REFERENCES department(department_id)
 )

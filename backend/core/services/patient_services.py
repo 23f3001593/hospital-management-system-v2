@@ -33,7 +33,7 @@ class PatientServices:
             raise AlreadyExistError("Username already exists.")
         new_user = User(username=data['username'], password=data['password'], email=data['email'], phone_number=data['phone_number'], full_name=data['full_name'], role='patient')
         db.session.add(new_user)
-        db.session.commit()
+        db.session.flush()
         new_patient = Patient(user_id=new_user.id, dob=dob, gender=data['gender'], address=data['address'], pincode=data['pincode'])
         db.session.add(new_patient)
         db.session.commit()

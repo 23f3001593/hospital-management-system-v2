@@ -15,7 +15,7 @@ export default [
         { path: "doctors", component: DoctorsOverview },
         { path: "doctor/create", component: CreateDoctor },
         { path: "patients", component: PatientsOverview },
-        { path: "update", component: UpdateAdmin },
+        { path: "account", component: UpdateAdmin },
     ],
   },
 ];

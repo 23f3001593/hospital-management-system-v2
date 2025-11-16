@@ -2,21 +2,15 @@
     <div>
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <router-link to="/admin" class="navbar-brand">
+                <router-link to="/doctor" class="navbar-brand">
                     <img src="@/assets/dummy.png" alt="dummy" class="header-logo"/>
                 </router-link>            
                 <div class="ms-auto d-flex align-items-center">
-                    <router-link to="/admin" class="btn me-2" :class="{'btn-primary':isActive('/admin'), 'btn-outline-primary':!isActive('/admin')}">
+                    <router-link to="/doctor" class="btn me-2" :class="{'btn-primary':isActive('/doctor'), 'btn-outline-primary':!isActive('/doctor')}">
                         Home
                     </router-link>
-                    <router-link to="/admin/departments" class="btn me-2" :class="{'btn-primary':isActive('/admin/departments'), 'btn-outline-primary':!isActive('/admin/departments')}">
-                        Departments
-                    </router-link>
-                    <router-link to="/admin/doctors" class="btn me-2" :class="{'btn-primary':isActive('/admin/doctors'), 'btn-outline-primary':!isActive('/admin/doctors')}">
-                        Doctors
-                    </router-link>
-                    <router-link to="/admin/patients" class="btn me-2" :class="{'btn-primary':isActive('/admin/patients'), 'btn-outline-primary':!isActive('/admin/patients')}">
-                        Patients
+                    <router-link to="/doctor/availability" class="btn me-2" :class="{'btn-primary':isActive('/doctor/availability'), 'btn-outline-primary':!isActive('/doctor/availability')}">
+                        Availability
                     </router-link>
                     <div class="dropdown ms-3">
                         <a class="text-white d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">
@@ -25,7 +19,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="profileDropdown">
                             <li>
-                                <router-link class="dropdown-item dropdown-first" to="/admin/account">Account</router-link>
+                                <router-link class="dropdown-item dropdown-first" to="/doctor/account">Account</router-link>
                             </li>
                             <li>
                                 <button class="dropdown-item dropdown-last" @click="openLogoutModal">Logout</button>
@@ -64,7 +58,7 @@
 <script>
     import { handleScrollLock } from "@/utils/scroll-lock";
     export default {
-        name: "AdminNavbar",
+        name: "DoctorNavbar",
         data() {
             return {
                 showLogoutModal: false,

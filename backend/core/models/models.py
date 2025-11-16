@@ -79,6 +79,7 @@ class Doctor(db.Model):
     qualifications = db.Column(db.Text, nullable=False)
     practice_start_date = db.Column(db.Date, nullable=False)
     fees = db.Column(db.Numeric, nullable=False)
+    is_availability_updated = db.Column(db.Boolean, nullable=False, default=False)
     availabilities = db.relationship('Availability', backref='doctor')
     slots = db.relationship('Slot', backref='doctor')
     appointments = db.relationship('Appointment', backref='doctor')
@@ -91,7 +92,8 @@ class Doctor(db.Model):
             "license_number": self.license_number,
             "qualifications": self.qualifications,
             "practice_start_date": self.practice_start_date.isoformat(),
-            "fees": float(self.fees)
+            "fees": float(self.fees),
+            "is_availability_updated": self.is_availability_updated
         }
         if include_user:
             data["user"] = self.user.to_dict(include_doctor=False)
