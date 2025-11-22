@@ -198,7 +198,7 @@
                     <div v-if="passwordError" class="text-danger mt-1">{{ passwordError }}</div>
                 </div>
                 <div class="d-flex justify-content-between">
-                    <router-link to="/admin/doctors" class="btn btn-outline-secondary w-50 me-2">Cancel</router-link>    
+                    <router-link to="/admin/doctors" class="btn btn-outline-secondary w-50 me-2">Cancel</router-link>
                     <button type="submit" class="btn btn-primary w-50" :disabled="loading">
                         <span v-if="loading" class="spinner-border spinner-border-sm" role="status"></span>
                         <span v-else>Create</span>

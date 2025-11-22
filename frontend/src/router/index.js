@@ -3,11 +3,13 @@ import store from "@/store";
 import mainRoutes from "@/router/main-routes";
 import adminRoutes from "@/router/admin-routes";
 import doctorRoutes from "@/router/doctor-routes";
+import patientRoutes from "@/router/patient-routes";
 
 const routes = [
     ...mainRoutes,
     ...adminRoutes,
     ...doctorRoutes,
+    ...patientRoutes,
 ];
 
 const router = createRouter({

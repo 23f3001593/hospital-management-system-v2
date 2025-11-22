@@ -2,7 +2,7 @@
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0 fw-bold">{{ title }}</h2>
-            <button v-if="!archived" class="btn btn-primary" @click="openCreateDepartmentModal">+ Create Department</button>
+            <button v-if="!archived" class="btn btn-primary" @click="openCreateDepartmentModal"><i class="bi bi-plus-lg"></i> Create Department</button>
         </div>
         <div class="row">
             <div v-for="department in departments" :key="department.department_id" class="col-md-6 col-lg-4 mb-4">

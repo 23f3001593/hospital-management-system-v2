@@ -38,7 +38,7 @@ def create_department():
 def read_department(department_id):
     try:
         department = AdminServices.read_department(department_id)
-        return jsonify(department.to_dict()),200
+        return jsonify(department.to_dict(include_doctors=True)),200
     except (NotFoundError) as e:
         return e.get_response()
     except Exception:

@@ -154,7 +154,7 @@ class AdminServices:
             availability = Availability(doctor_id=new_doctor.doctor_id, week_day=day, forenoon_slot=False, afternoon_slot=False)
             db.session.add(availability)
         db.session.flush()
-        slot_times = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
+        slot_times = ["10:00", "11:00", "12:00", "16:00", "17:00", "18:00"]
         for day in week_days:
             for time_str in slot_times:
                 slot_time = datetime.strptime(time_str, "%H:%M").time()

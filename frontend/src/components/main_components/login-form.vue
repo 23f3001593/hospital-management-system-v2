@@ -90,6 +90,7 @@
                     } else if (role === "patient") {
                         this.$router.push("/patient")
                     } else {
+                        await this.$store.dispatch("logout")
                         this.$router.push("/")
                     }
                 } catch (error) {

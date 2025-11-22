@@ -6,7 +6,7 @@
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" v-model="searchQuery" class="form-control" placeholder="Type to search..."/>
             </div>
-            <router-link v-if="!archived" to="/admin/doctor/create" class="btn btn-primary">+ Create Doctor</router-link>
+            <router-link v-if="!archived" to="/admin/doctor/create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create Doctor</router-link>
         </div>
         <div class="card">
             <div class="card-body p-0">
@@ -149,8 +149,7 @@
                 this.errorMessage = "";
                 try {
                     this.loading = true;
-                    const id = this.$store.state.user.id;
-                    const response = await axios.patch(`/doctor/${id}`);
+                    const response = await axios.patch(`/doctor/${doctor.user.id}`);
                     this.closeDeleteDoctorModal();
                     showToast('Doctor deleted successfully.','success');
                     this.$emit("doctorsChanged");
@@ -205,6 +204,9 @@
                 this.showDeleteDoctorModal = false;
                 this.selectedDoctor = null;
                 this.errorMessage = "";
+                this.$nextTick(() => {
+                    handleScrollLock([this.showReadDoctorModal, this.showDeleteDoctorModal]);
+                });
             },
         },
     };
@@ -213,7 +215,7 @@
 <style scoped>
     .search-bar {
         width: 100%;
-        width: 300px;
+        max-width: 300px;
     }
     .input-group .form-control{
         outline: none !important;

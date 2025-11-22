@@ -1,8 +1,9 @@
 import os
+from datetime import time
 from decimal import Decimal,InvalidOperation
 from werkzeug.utils import secure_filename
 from core.extensions import db
-from core.models.models import User,Doctor,Availability,Appointment
+from core.models.models import User,Doctor,Availability,Appointment,Treatment
 from core.utils.exceptions import ValidationError,NotFoundError,AlreadyExistError,MissingFieldsError
 
 UPLOAD_FOLDER = "core/static/uploads/doctors"
@@ -15,12 +16,16 @@ class DoctorServices:
         user = User.query.get(id)
         if not user or not hasattr(user, "doctor") or not user.doctor:
             raise NotFoundError("Doctor not found.")
+        if user.is_archived:
+            raise NotFoundError("Doctor not found.")
         return user.doctor
 
     @staticmethod
     def update_doctor(id, data, file):
         user = User.query.get(id)
         if not user or not hasattr(user, "doctor") or not user.doctor:
+            raise NotFoundError("Doctor not found.")
+        if user.is_archived:
             raise NotFoundError("Doctor not found.")
         if not data:
             raise MissingFieldsError("All fields are required.")
@@ -85,7 +90,7 @@ class DoctorServices:
             raise NotFoundError("Doctor not found.")
         active_appointment = Appointment.query.filter(Appointment.doctor_id==user.doctor.doctor_id, Appointment.status=='booked').first()
         if active_appointment:
-            raise ValidationError("Cannot delete doctor: An active appointment is assigned to it.")
+            raise ValidationError("Cannot delete account: An active appointment is assigned.")
         if user.profile_picture:
             try:
                 os.remove(user.profile_picture)
@@ -101,9 +106,9 @@ class DoctorServices:
         user = User.query.get(id)
         if not user or not hasattr(user, "doctor") or not user.doctor:
             raise NotFoundError("Doctor not found.")
-        doctor_id = user.doctor.doctor_id
-        availabilities = Availability.query.filter_by(doctor_id=doctor_id).all()        
-        availability_dict = {availability.week_day: [availability.forenoon_slot, availability.afternoon_slot] for availability in availabilities}
+        if user.is_archived:
+            raise NotFoundError("Doctor not found.")
+        availability_dict = {availability.week_day: [availability.forenoon_slot, availability.afternoon_slot] for availability in user.doctor.availabilities}
         return availability_dict
     
     @staticmethod
@@ -111,12 +116,57 @@ class DoctorServices:
         user = User.query.get(id)
         if not user or not hasattr(user, "doctor") or not user.doctor:
             raise NotFoundError("Doctor not found.")
+        if user.is_archived:
+            raise NotFoundError("Doctor not found.")
         doctor_id = user.doctor.doctor_id
         for week_day, slots in data.items():
             forenoon_slot, afternoon_slot = slots
             availability = Availability.query.filter_by(doctor_id=doctor_id, week_day=week_day).first()
             availability.forenoon_slot = bool(forenoon_slot)
             availability.afternoon_slot = bool(afternoon_slot)
-        user.doctor.is_availability_updated = True
         db.session.commit()
         return {"message": "Availability updated successfully."}
+    
+    @staticmethod
+    def read_slot(doctor_id):
+        doctor = Doctor.query.get(doctor_id)
+        if not doctor:
+            raise NotFoundError("Doctor not found.")
+        if doctor.user.is_archived:
+            raise NotFoundError("Doctor not found.")
+        required_times = [time(10, 0), time(11, 0), time(12, 0), time(16, 0), time(17, 0), time(18, 0)]
+        week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        slot_dict = {day: [False] * 6 for day in week_days}
+        for slot in doctor.slots:
+            if slot.week_day in slot_dict and slot.slot_time in required_times:
+                idx = required_times.index(slot.slot_time)
+                slot_dict[slot.week_day][idx] = True if slot.status == "available" else False
+        return slot_dict
+    
+    @staticmethod
+    def all_scheduled_appointments(id):
+        user = User.query.get(id)
+        if not user or not hasattr(user, "doctor") or not user.doctor:
+            raise NotFoundError("Doctor not found.")
+        if user.is_archived:
+            raise NotFoundError("Doctor not found.")
+        appointments = Appointment.query.filter_by(doctor_id=user.doctor.doctor_id, status="booked").all()
+        return appointments
+    
+    @staticmethod
+    def create_treatment(appointment_id, data):
+        appointment = Appointment.query.get(appointment_id)
+        if not appointment:
+            raise NotFoundError("Appointment not found.")
+        if appointment.status!="booked":
+            raise NotFoundError("Appointment not found.")
+        if not data:
+            raise MissingFieldsError("All fields are required.")
+        if not all([data['tests'], data['diagnosis'], data['prescription'], data['medicines'], data['notes']]):
+            raise MissingFieldsError("All fields are required.")
+        new_treatment = Treatment(appointment_id=appointment.appointment_id, tests=data['tests'], diagnosis=data['diagnosis'], prescription=data['prescription'], medicines=data['medicines'], notes=data['notes'])
+        db.session.add(new_treatment)
+        appointment.slot.status = "available"
+        appointment.status = "completed"
+        db.session.commit()
+        return {"message":"Appointment completed successfully."}

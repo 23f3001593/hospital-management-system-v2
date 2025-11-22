@@ -56,3 +56,34 @@ def update_availability(id):
         return e.get_response()
     except Exception:
         return jsonify({"message":"Something went wrong. Please try again later."}),500
+
+@doctor_bp.route('/slot/<int:doctor_id>', methods=['GET'])
+def read_slot(doctor_id):
+    try:
+        slot = DoctorServices.read_slot(doctor_id)
+        return jsonify(slot),200
+    except (NotFoundError) as e:
+        return e.get_response()
+    except Exception:
+        return jsonify({"message":"Something went wrong. Please try again later."}),500
+
+@doctor_bp.route('/appointments/<int:id>', methods=['GET'])
+def all_scheduled_appointments(id):
+    try:
+        appointments = DoctorServices.all_scheduled_appointments(id)
+        return jsonify({"appointments": [appointment.to_dict(include_patient=True, include_slot=True) for appointment in appointments]}),200
+    except (NotFoundError) as e:
+        return e.get_response()
+    except Exception:
+        return jsonify({"message":"Something went wrong. Please try again later."}),500
+
+@doctor_bp.route('/treatment/<int:appointment_id>', methods=['POST'])
+def create_treatment(appointment_id):
+    try:
+        data = request.json
+        message = DoctorServices.create_treatment(appointment_id, data)
+        return jsonify(message),200
+    except (NotFoundError,MissingFieldsError) as e:
+        return e.get_response()
+    except Exception:
+        return jsonify({"message":"Something went wrong. Please try again later."}),500

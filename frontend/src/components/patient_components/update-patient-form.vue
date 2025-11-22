@@ -1,8 +1,8 @@
 <template>
-    <div class="register-container my-5">
-        <div class="register-card">
-            <h1 class="text-center mb-4 text-primary fw-bold">Sign Up</h1>
-            <form @submit.prevent="registerPatient">
+    <div class="update-patient-container my-5">
+        <div class="update-patient-card">
+            <h1 class="text-center mb-4 text-primary fw-bold">Profile</h1>
+            <form @submit.prevent="updatePatient">
                 <div class="mb-3">
                     <label for="fullname" class="form-label">
                         Full Name <span class="text-danger">*</span>
@@ -19,33 +19,29 @@
                 </div>
                 <div class="mb-3">
                     <label for="dob" class="form-label">
-                        Date of Birth <span class="text-danger">*</span>
+                        Date of Birth
                     </label>
                     <input
                         type="date"
                         id="dob"
                         class="form-control"
                         v-model="form.dob"
-                        :class="{'is-invalid': dobError}"
-                        autocomplete="bday"
+                        disabled
                     />
-                    <div v-if="dobError" class="text-danger mt-1">{{ dobError }}</div>
                 </div>
                 <div class="mb-3">
                     <label for="gender" class="form-label">
-                        Gender <span class="text-danger">*</span>
+                        Gender
                     </label>
                     <select
                         id="gender"
                         class="form-select"
                         v-model="form.gender"
-                        :class="{'is-invalid': genderError}"
-                        autocomplete="sex"
+                        disabled
                     >
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
-                    <div v-if="genderError" class="text-danger mt-1">{{ genderError }}</div>
                 </div>
                 <div class="mb-3">
                     <label for="phone_number" class="form-label">
@@ -151,8 +147,31 @@
                     <div v-if="usernameError" class="text-danger mt-1">{{ usernameError }}</div>
                 </div>
                 <div class="mb-4">
-                    <label for="password" class="form-label">
-                        Password <span class="text-danger">*</span>
+                    <label for="current_password" class="form-label">
+                        Current Password <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input
+                            :type="showCurrentPassword ? 'text' : 'password'"
+                            id="current_password"
+                            class="form-control"
+                            v-model.trim="form.current_password"
+                            :class="{'is-invalid': currentPasswordError}"
+                            autocomplete="current-password"
+                        />
+                        <span
+                            class="input-group-text password-eye"
+                            @click="showCurrentPassword = !showCurrentPassword"
+                            style="cursor:pointer;"
+                        >
+                            <i :class="showCurrentPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
+                        </span>
+                    </div>
+                    <div v-if="currentPasswordError" class="text-danger mt-1">{{ currentPasswordError }}</div>
+                </div>
+                <div class="mb-4">
+                    <label for="new_password" class="form-label">
+                        New Password
                         <i
                             class="bi bi-info-circle ms-2 text-secondary"
                             data-bs-toggle="tooltip"
@@ -171,73 +190,134 @@
                     </label>
                     <div class="input-group">
                         <input
-                            :type="showPassword ? 'text' : 'password'"
-                            id="password"
+                            :type="showNewPassword ? 'text' : 'password'"
+                            id="new_password"
                             class="form-control"
-                            v-model.trim="form.password"
-                            :class="{'is-invalid': passwordError}"
+                            v-model.trim="form.new_password"
+                            :class="{'is-invalid': newPasswordError}"
                             autocomplete="new-password"
                         />
                         <span
                             class="input-group-text password-eye"
-                            @click="showPassword = !showPassword"
+                            @click="showNewPassword = !showNewPassword"
                             style="cursor:pointer;"
                         >
-                            <i :class="showPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
+                            <i :class="showNewPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
                         </span>
                     </div>
-                    <div v-if="passwordError" class="text-danger mt-1">{{ passwordError }}</div>
+                    <div v-if="newPasswordError" class="text-danger mt-1">{{ newPasswordError }}</div>
                 </div>
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary justify-content-center align-items-center" :disabled="loading">
-                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status"></span>
-                        <span v-else>Register</span>
+                <div class="d-flex justify-content-between mb-2">
+                    <router-link to="/patient" class="btn btn-outline-secondary w-50 me-2">Cancel</router-link>    
+                    <button type="submit" class="btn btn-primary w-50" :disabled="updateLoading || deleteLoading">
+                        <span v-if="updateLoading" class="spinner-border spinner-border-sm" role="status"></span>
+                        <span v-else>Update</span>
                     </button>
                 </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-danger w-100" @click="openDeleteAccountModal" :disabled="deleteLoading || updateLoading">Delete Account</button>
+                </div>
             </form>
-            <p class="text-center mt-3">
-                Already have an account?
-                <router-link to="/login" class="text-decoration-none text-primary fw-medium">Login</router-link>
-            </p>
-            <div v-if="errorMessage" class="text-danger text-center mt-2">{{ errorMessage }}</div>
+            <div v-if="updateErrorMessage" class="text-danger text-center mt-2">{{ updateErrorMessage }}</div>
+        </div>
+        <div v-if="showDeleteAccountModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-md modal-dialog-centered">
+                <div class="modal-content rounded-4 shadow-lg">
+                    <div class="modal-header bg-primary">
+                        <h4 class="modal-title fw-bold">Confirm Account Deletion</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">Are you sure you want to delete your account?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-outline-secondary w-50 me-2" @click="closeDeleteAccountModal">Cancel</button>
+                                <button class="btn btn-danger w-50" @click="deleteAccount()" :disabled="deleteLoading">
+                                    <span v-if="deleteLoading" class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span v-else>Delete</span>
+                                </button>
+                            </div>
+                            <div v-if="deleteErrorMessage" class="text-danger text-center mt-2">{{ deleteErrorMessage }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-    import axios from "axios"
+    import axios from "axios";
+    import { handleScrollLock } from "@/utils/scroll-lock";
+    import { showToast } from "@/utils/toast.js";
     export default {
-        name: "CreatePatientForm",
+        name: "UpdatePatientForm",
+        props: {
+            patient: Object,
+        },
         data() {
             return {
-                loading: false,
-                showPassword: false,
-                errorMessage: "",
+                updateLoading: false,
+                deleteLoading: false,
+                showCurrentPassword: false,
+                showNewPassword: false,
+                showDeleteAccountModal: false,
+                updateErrorMessage: "",
+                deleteErrorMessage: "",
                 form: {
                     fullname: "",
                     dob: "",
                     gender: "",
-                    country_code: "+91",
+                    country_code: "",
                     phone_number: "",
                     email_name: "",
-                    email_domain: "@example.com",
+                    email_domain: "",
                     address: "",
                     pincode: "",
                     username: "",
-                    password: "",
+                    current_password: "",
+                    new_password: "",
                 },
                 fullnameError: "",
-                dobError: "",
-                genderError: "",
                 phoneError: "",
                 emailError: "",
                 addressError: "",
                 pincodeError: "",
                 usernameError: "",
-                passwordError: "",
+                currentPasswordError: "",
+                newPasswordError: "",
             };
         },
         watch: {
+            patient: {
+                immediate: true,
+                handler(newPatient) {
+                    if (newPatient && Object.keys(newPatient).length > 0) {
+                        this.form.fullname = newPatient.user.full_name || "";
+                        this.form.dob = newPatient.dob || "";
+                        this.form.gender = newPatient.gender || "";
+                        if (newPatient.user.phone_number) {
+                            const match = newPatient.user.phone_number.match(/^(\+\d{1,3}?)(\d{10})$/);
+                            if (match) {
+                                this.form.country_code = match[1];
+                                this.form.phone_number = match[2];
+                            }
+                        }
+                        if (newPatient.user.email) {
+                            const [namePart, domainPart] = newPatient.user.email.split("@");
+                            this.form.email_name = namePart || "";
+                            this.form.email_domain = domainPart ? "@" + domainPart : "@example.com";
+                        }
+                        this.form.address = newPatient.address || "";
+                        this.form.pincode = newPatient.pincode || "";
+                        this.form.username = newPatient.user.username || "";
+                        this.form.current_password = "";
+                        this.form.new_password = "";
+                    }
+                },
+            },
+            showDeleteAccountModal: 'updateScrollLock',
             "form.fullname"(value) {
                 const regex = /^[A-Za-z\s]{1,}$/;
                 if (!value) this.fullnameError = "";
@@ -268,27 +348,23 @@
                 else if (!regex.test(value)) this.usernameError = "Invalid Username. Please ensure it meets the requirements provided.";
                 else this.usernameError = "";
             },
-            "form.password"(value) {
-                const regex = /^[A-Za-z0-9!#$%&]{1,}$/;
-                if (!value) this.passwordError = "";
-                else if (!regex.test(value)) this.passwordError = "Invalid Password. Please ensure it meets the requirements provided.";
-                else this.passwordError = "";
+            "form.current_password"(value) {
+                if (!value) this.currentPasswordError = "";
+                else this.currentPasswordError = "";
+            },
+            "form.new_password"(value) {
+                const regex = /^[A-Za-z0-9!#$%&]{0,}$/;
+                if (!value) this.newPasswordError = "";
+                else if (!regex.test(value)) this.newPasswordError = "Invalid Password. Please ensure it meets the requirements provided.";
+                else this.newPasswordError = "";
             },
         },
         methods: {
-            async registerPatient() {
+            async updatePatient() {
                 this.clearAllErrors();
                 let valid = true;
                 if (!this.form.fullname) {
                     this.fullnameError = "Full Name is required.";
-                    valid = false;
-                }
-                if (!this.form.dob) {
-                    this.dobError = "Date of Birth is required.";
-                    valid = false;
-                }
-                if (!this.form.gender) {
-                    this.genderError = "Gender is required.";
                     valid = false;
                 }
                 if (!this.form.phone_number) {
@@ -311,8 +387,8 @@
                     this.usernameError = "Username is required.";
                     valid = false;
                 }
-                if (!this.form.password) {
-                    this.passwordError = "Password is required.";
+                if (!this.form.current_password) {
+                    this.currentPasswordError = "Current Password is required.";
                     valid = false;
                 }
                 if (this.form.fullname) {
@@ -333,77 +409,105 @@
                         valid = false;
                     }
                 }
-                if (this.form.dob) {
-                    const dobDate = new Date(this.form.dob);
-                    const today = new Date();
-                    if (dobDate > today) {
-                        this.dobError = "Please enter a valid Date of Birth.";
+                if (this.form.current_password) {
+                    if (this.form.current_password.length < 8) {
+                        this.currentPasswordError = "Invalid Password.";
+                        valid = false;
+                    }
+                    const lower = /[a-z]/.test(this.form.current_password);
+                    const upper = /[A-Z]/.test(this.form.current_password);
+                    const number = /[0-9]/.test(this.form.current_password);
+                    const special = /[!#$%&]/.test(this.form.current_password);
+                    if (!(lower && upper && number && special)) {
+                        this.currentPasswordError = "Invalid Password.";
                         valid = false;
                     }
                 }
-                if (this.form.password) {
-                    if (this.form.password.length < 8) {
-                        this.passwordError = "Invalid Password. Please ensure it meets the requirements provided.";
+                if (this.form.new_password) {
+                    if (this.form.new_password.length < 8) {
+                        this.newPasswordError = "Invalid Password. Please ensure it meets the requirements provided.";
                         valid = false;
                     }
-                    const lower = /[a-z]/.test(this.form.password);
-                    const upper = /[A-Z]/.test(this.form.password);
-                    const number = /[0-9]/.test(this.form.password);
-                    const special = /[!#$%&]/.test(this.form.password);
+                    const lower = /[a-z]/.test(this.form.new_password);
+                    const upper = /[A-Z]/.test(this.form.new_password);
+                    const number = /[0-9]/.test(this.form.new_password);
+                    const special = /[!#$%&]/.test(this.form.new_password);
                     if (!(lower && upper && number && special)) {
-                        this.passwordError = "Invalid Password. Please ensure it meets the requirements provided.";
+                        this.newPasswordError = "Invalid Password. Please ensure it meets the requirements provided.";
                         valid = false;
                     }
                 }
                 if (!valid) return;
                 try {
-                    this.loading = true;
-                    const payload = {
-                        full_name: this.form.fullname,
-                        dob: this.form.dob,
-                        gender: this.form.gender,
-                        phone_number: this.form.country_code + this.form.phone_number,
-                        email: this.form.email_name + this.form.email_domain,
-                        address: this.form.address,
-                        pincode: this.form.pincode,
-                        username: this.form.username,
-                        password: this.form.password,
-                    };
-                    const response = await axios.post('/patient', payload);
-                    await this.$store.dispatch("login", {
-                        username: response.data.username,
-                        password: this.form.password,
-                    })
-                    const role = this.$store.state.user.role
-                    if (role === "patient") {
-                        this.$router.push("/patient")
+                    this.updateLoading = true;
+                    const id = this.$store.state.user.id;
+                    const formData = new FormData();
+                    formData.append('full_name', this.form.fullname);
+                    formData.append('phone_number', this.form.country_code + this.form.phone_number);
+                    formData.append('email', this.form.email_name + this.form.email_domain);
+                    formData.append('address', this.form.address);
+                    formData.append('pincode', this.form.pincode);
+                    formData.append('username', this.form.username);
+                    formData.append('current_password', this.form.current_password);
+                    formData.append('new_password', this.form.new_password);
+                    const response = await axios.put(`/patient/${id}`, formData, {headers: {'Content-Type': 'multipart/form-data'}});
+                    showToast(response.data.message,'success');
+                    this.$store.commit('setUser', {
+                        id: this.$store.state.user.id,
+                        role: this.$store.state.user.role,
+                        fullname: this.form.fullname
+                    });
+                    localStorage.setItem('user_fullname', this.form.fullname);
+                    this.$router.push("/patient")
+                } catch (err) {
+                    if (err.response) {
+                        this.updateErrorMessage = err.response.data.message;
                     } else {
-                        await this.$store.dispatch("logout")
-                        this.$router.push("/")
-                    }
-                } catch (error) {
-                    if (error.response) {
-                        this.errorMessage = error.response.data.message;
-                    } else if (error.request) {
-                        this.errorMessage = "Failed to reach server. Please try again later.";
-                    } else {
-                        this.errorMessage = "Something went wrong. Please try again later.";
+                        this.updateErrorMessage = "Something went wrong. Please try again later.";
                     }
                 } finally {
-                    this.loading = false;
+                    this.updateLoading = false;
                 }
             },
+            async deleteAccount() {
+                this.deleteErrorMessage = "";
+                try {
+                    this.deleteLoading = true;
+                    const id = this.$store.state.user.id;
+                    await axios.patch(`/patient/${id}`);
+                    this.closeDeleteAccountModal();
+                    await this.$store.dispatch("logout")
+                    this.$router.push("/")
+                } catch (error) {
+                    if (error.response) {
+                        this.deleteErrorMessage = error.response.data.message;
+                    } else {
+                        this.deleteErrorMessage = "Something went wrong. Please try again later.";
+                    }
+                } finally {
+                    this.deleteLoading = false;
+                }
+            },
+            updateScrollLock() {
+                handleScrollLock([this.showDeleteAccountModal]);
+            },
+            openDeleteAccountModal(patient) {
+                this.showDeleteAccountModal = true;
+            },
+            closeDeleteAccountModal() {
+                this.showDeleteAccountModal = false;
+                this.deleteErrorMessage = "";
+            },
             clearAllErrors() {
-                this.errorMessage = "";
+                updateErrorMessage: "",
                 this.fullnameError = "";
-                this.dobError = "";
-                this.genderError = "";
                 this.phoneError = "";
                 this.emailError = "";
                 this.addressError = "";
                 this.pincodeError = "";
                 this.usernameError = "";
-                this.passwordError = "";
+                this.currentPasswordError = "";
+                this.newPasswordError = "";
             },
         },
         mounted() {
@@ -420,12 +524,12 @@
 </script>
 
 <style scoped>
-    .register-container {
+    .update-patient-container {
         display: flex;
         justify-content: center;
         align-items: center;
     }
-    .register-card {
+    .update-patient-card {
         background-color: #e2e6ea;
         padding: 2rem;
         border-radius: 10px;
@@ -445,5 +549,12 @@
     }
     .form-control, .form-select {
         font-size: 0.95rem;
+    }
+    .modal-header .btn-close {
+        filter: invert(1) brightness(200%);
+        opacity: 1;
+    }
+    .modal-header .btn-close:focus, .modal-header .btn-close:active {
+        box-shadow: none !important;
     }
 </style>

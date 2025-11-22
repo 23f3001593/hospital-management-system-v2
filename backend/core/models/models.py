@@ -79,7 +79,6 @@ class Doctor(db.Model):
     qualifications = db.Column(db.Text, nullable=False)
     practice_start_date = db.Column(db.Date, nullable=False)
     fees = db.Column(db.Numeric, nullable=False)
-    is_availability_updated = db.Column(db.Boolean, nullable=False, default=False)
     availabilities = db.relationship('Availability', backref='doctor')
     slots = db.relationship('Slot', backref='doctor')
     appointments = db.relationship('Appointment', backref='doctor')
@@ -92,8 +91,7 @@ class Doctor(db.Model):
             "license_number": self.license_number,
             "qualifications": self.qualifications,
             "practice_start_date": self.practice_start_date.isoformat(),
-            "fees": float(self.fees),
-            "is_availability_updated": self.is_availability_updated
+            "fees": float(self.fees)
         }
         if include_user:
             data["user"] = self.user.to_dict(include_doctor=False)
@@ -194,7 +192,7 @@ class Appointment(db.Model):
     )
     treatment = db.relationship('Treatment', backref='appointment', uselist=False)
 
-    def to_dict(self, include_doctor=False, include_patient=False, include_treatment=False):
+    def to_dict(self, include_doctor=False, include_patient=False, include_slot=False, include_treatment=False):
         data = {
             "appointment_id": self.appointment_id,
             "patient_id": self.patient_id,
@@ -204,11 +202,13 @@ class Appointment(db.Model):
             "status": self.status
         }
         if include_doctor:
-            data["doctor"] = self.doctor.to_dict(include_appointments=False)
+            data["doctor"] = self.doctor.to_dict(include_appointments=False, include_user=True, include_department=True)
         if include_patient:
-            data["patient"] = self.patient.to_dict(include_appointments=False)
+            data["patient"] = self.patient.to_dict(include_appointments=False, include_user=True)
+        if include_slot:
+            data["slot"] = self.slot.to_dict(include_appointments=False)
         if include_treatment and self.treatment:
-            data["treatment"] = self.treatment.to_dict()
+            data["treatment"] = self.treatment.to_dict(include_appointment=False)
         return data
 
 class Treatment(db.Model):
@@ -221,8 +221,8 @@ class Treatment(db.Model):
     medicines = db.Column(db.Text, nullable=False)
     notes = db.Column(db.Text, nullable=False)
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_appointment=False):
+        data = {
             "treatment_id": self.treatment_id,
             "appointment_id": self.appointment_id,
             "tests": self.tests,
@@ -231,6 +231,9 @@ class Treatment(db.Model):
             "medicines": self.medicines,
             "notes": self.notes
         }
+        if include_appointment:
+            data["appointment"] = self.appointment.to_dict(include_treatment=False)
+        return data
 
 admin_data = ("ramkumar", "Ram&Kumar9", "ramkumar@example.com", "+915555555555", "Ram Kumar", "admin")
 def create_admin(admin_data = admin_data):

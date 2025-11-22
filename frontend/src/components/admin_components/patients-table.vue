@@ -145,7 +145,7 @@
                 this.errorMessage = "";
                 try {
                     this.loading = true;
-                    const response = await axios.patch(`/patient/${patient.patient_id}`);
+                    const response = await axios.patch(`/patient/${patient.user.id}`);
                     this.closeDeletePatientModal();
                     showToast('Patient deleted successfully.','success');
                     this.$emit("patientsChanged");
@@ -224,6 +224,9 @@
                 this.showDeletePatientModal = false;
                 this.selectedPatient = null;
                 this.errorMessage = "";
+                this.$nextTick(() => {
+                    handleScrollLock([this.showReadPatientModal, this.showDeletePatientModal]);
+                });
             },
         },
     };
@@ -232,7 +235,7 @@
 <style scoped>
     .search-bar {
         width: 100%;
-        width: 300px;
+        max-width: 300px;
     }
     .input-group .form-control{
         outline: none !important;

@@ -5,8 +5,7 @@ import CreateDoctor from "@/views/admin_views/create-doctor.vue";
 import PatientsOverview from "@/views/admin_views/patients-overview.vue";
 import UpdateAdmin from "@/views/admin_views/update-admin.vue";
 
-export default [
-  {
+export default [{
     path: "/admin",
     component: AdminDashboard,
     meta: { requiresAuth: true },
@@ -17,5 +16,4 @@ export default [
         { path: "patients", component: PatientsOverview },
         { path: "account", component: UpdateAdmin },
     ],
-  },
-];
+}];

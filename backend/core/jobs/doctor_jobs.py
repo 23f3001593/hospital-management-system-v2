@@ -5,7 +5,7 @@ from core.models.models import User,Doctor,Slot
 
 @celery.task(name="core.jobs.doctor_jobs.update_doctor_slots")
 def update_doctor_slots():
-    doctors = Doctor.query.join(User).filter(User.is_archived==False, Doctor.is_availability_updated==True).all()
+    doctors = Doctor.query.join(User).filter(User.is_archived==False).all()
     if not doctors:
         return "No doctor found."
     forenoon_times = [time(10,0), time(11,0), time(12,0)]
