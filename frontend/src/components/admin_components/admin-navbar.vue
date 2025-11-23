@@ -6,17 +6,20 @@
                     <img src="@/assets/dummy.png" alt="dummy" class="header-logo"/>
                 </router-link>            
                 <div class="ms-auto d-flex align-items-center">
-                    <router-link to="/admin" class="btn me-2" :class="{'btn-primary':isActive('/admin'), 'btn-outline-primary':!isActive('/admin')}">
+                    <router-link to="/admin" class="btn me-3" :class="{'btn-primary':isActive('/admin'), 'btn-outline-primary':!isActive('/admin')}">
                         Home
                     </router-link>
-                    <router-link to="/admin/departments" class="btn me-2" :class="{'btn-primary':isActive('/admin/departments'), 'btn-outline-primary':!isActive('/admin/departments')}">
+                    <router-link to="/admin/departments" class="btn me-3" :class="{'btn-primary':isActive('/admin/departments'), 'btn-outline-primary':!isActive('/admin/departments')}">
                         Departments
                     </router-link>
-                    <router-link to="/admin/doctors" class="btn me-2" :class="{'btn-primary':isActive('/admin/doctors'), 'btn-outline-primary':!isActive('/admin/doctors')}">
+                    <router-link to="/admin/doctors" class="btn me-3" :class="{'btn-primary':isActive('/admin/doctors'), 'btn-outline-primary':!isActive('/admin/doctors')}">
                         Doctors
                     </router-link>
-                    <router-link to="/admin/patients" class="btn me-2" :class="{'btn-primary':isActive('/admin/patients'), 'btn-outline-primary':!isActive('/admin/patients')}">
+                    <router-link to="/admin/patients" class="btn me-3" :class="{'btn-primary':isActive('/admin/patients'), 'btn-outline-primary':!isActive('/admin/patients')}">
                         Patients
+                    </router-link>
+                    <router-link to="/admin/appointments" class="btn me-3" :class="{'btn-primary':isActive('/admin/appointments'), 'btn-outline-primary':!isActive('/admin/appointments')}">
+                        Appointments
                     </router-link>
                     <div class="dropdown ms-3">
                         <a class="text-white d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">

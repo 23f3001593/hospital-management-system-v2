@@ -1,7 +1,7 @@
 <template>
     <footer>
         <div class="container">
-            &copy; 2025 Medix. All rights reserved.
+            &copy; 2025 MediFlow. All rights reserved.
         </div>
     </footer>
 </template>

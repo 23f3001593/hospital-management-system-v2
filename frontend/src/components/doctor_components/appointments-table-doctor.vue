@@ -2,6 +2,10 @@
     <div class="container my-5">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 class="mb-0 fw-bold">{{ title }}</h2>
+            <div v-if="past" class="input-group search-bar">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" v-model="searchQuery" class="form-control" placeholder="Type to search..."/>
+            </div>
         </div>
         <div class="card">
             <div class="card-body p-0">
@@ -11,21 +15,27 @@
                             <tr>
                                 <th scope="col">S/N</th>
                                 <th scope="col">Patient</th>
+                                <th v-if="past" scope="col">Gender</th>
                                 <th scope="col">Date</th>
-                                <th scope="col">Day</th>
+                                <th v-if="!past" scope="col">Day</th>
                                 <th scope="col">Time</th>
-                                <th scope="col">Patient History</th>
-                                <th scope="col">Actions</th>
+                                <th v-if="past" scope="col">Treatment</th>
+                                <th v-if="past" scope="col">Status</th>
+                                <th v-if="!past" scope="col">Patient History</th>
+                                <th v-if="!past" scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(appointment,index) in appointments" :key="appointment.appointment_id">
+                            <tr v-for="(appointment,index) in filteredAppointments" :key="appointment.appointment_id">
                                 <td>{{ index + 1 }}</td>
                                 <td>{{ appointment.patient.user.full_name }}</td>
+                                <td v-if="past">{{ formatGender(appointment.patient.gender) }}</td>
                                 <td>{{ formatDate(appointment.appointment_date) }}</td>
-                                <td>{{ formatDay(appointment.appointment_date) }}</td>
+                                <td v-if="!past">{{ formatDay(appointment.appointment_date) }}</td>
                                 <td>{{ formatTime(appointment.slot.slot_time) }}</td>
-                                <td>
+                                <td v-if="past"><button class="btn btn-sm btn-primary" :disabled="!appointment.treatment" @click="openViewPatientTreatmentModal(appointment)">View</button></td>
+                                <td v-if="past" :class="{'text-success': appointment.status === 'completed','text-danger': appointment.status === 'cancelled'}">{{ formatStatus(appointment.status) }}</td>
+                                <td v-if="!past">
                                     <button type="button" class="btn btn-sm btn-primary position-relative" :disabled="rowLoading[appointment.appointment_id]" @click="openViewPatientHistoryModal(appointment)">
                                         <span class="d-inline-block text-center w-100" :class="{ 'invisible': rowLoading[appointment.appointment_id] }">View</span>
                                         <div v-show="rowLoading[appointment.appointment_id]" class="position-absolute top-50 start-50 translate-middle">
@@ -33,9 +43,14 @@
                                         </div>
                                     </button>
                                 </td>
-                                <td>
+                                <td v-if="!past">
                                     <button v-if="today" type="button" class="btn btn-sm btn-success me-2" @click="openCompleteAppointmentModal(appointment)">Complete</button>
                                     <button type="button" class="btn btn-sm btn-danger" @click="openCancelAppointmentModal(appointment)">Cancel</button>
+                                </td>
+                            </tr>
+                            <tr v-if="past && appointments.length > 0 && filteredAppointments.length === 0">
+                                <td colspan="7" class="text-muted fst-italic">
+                                    No matching records found.
                                 </td>
                             </tr>
                             <tr v-if="appointments.length === 0">
@@ -43,6 +58,23 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+        <div v-if="showViewPatientTreatmentModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-4 shadow-lg">
+                    <div class="modal-header bg-primary">
+                        <h3 class="modal-title fw-bold">{{ selectedAppointment.patient.user.full_name }}'s Treatment</h3>
+                        <button type="button" class="btn-close" @click="closeViewPatientTreatmentModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong>Tests:</strong> {{ selectedAppointment.treatment.tests }}</p>
+                        <p class="mb-2"><strong>Diagnosis:</strong> {{ selectedAppointment.treatment.diagnosis }}</p>
+                        <p class="mb-2"><strong>Prescription:</strong> {{ selectedAppointment.treatment.prescription }}</p>
+                        <p class="mb-2"><strong>Medicines:</strong> {{ selectedAppointment.treatment.medicines }}</p>
+                        <p class="mb-0"><strong>Notes:</strong> {{ selectedAppointment.treatment.notes }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,6 +86,11 @@
                         <button type="button" class="btn-close" @click="closeViewPatientHistoryModal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="mb-4">
+                            <p class="mb-0"><strong>Gender:</strong> {{ formatGender(selectedAppointment.patient.gender) }}</p>
+                            <p class="mb-0"><strong>Age:</strong> {{ formatAge(selectedAppointment.patient.dob) }}</p>
+                            <p class="mb-0"><strong>Phone Number:</strong> {{ formatPhoneNumber(selectedAppointment.patient.user.phone_number) }}</p>
+                        </div>
                         <div v-for="treatment in selectedPatientTreatments" :key="treatment.treatment_id" class="mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
@@ -196,6 +233,7 @@
         props: {
             title: String,
             appointments: Array,
+            past: Boolean,
             today: Boolean,
         },
         data() {
@@ -209,6 +247,8 @@
                 },
                 selectedAppointment: null,
                 selectedPatientTreatments: [],
+                searchQuery: "",
+                showViewPatientTreatmentModal: false,
                 showViewPatientHistoryModal: false,
                 showCompleteAppointmentModal: false,
                 showCancelAppointmentModal: false,
@@ -222,7 +262,22 @@
                 rowLoading: {},
             };
         },
+        computed: {
+            filteredAppointments() {
+                if (!this.past || !this.searchQuery.trim()) return this.appointments;
+                const q = this.searchQuery.toLowerCase();
+                return this.appointments.filter((appointment) => {
+                    return (
+                        appointment.patient.user.full_name.toLowerCase().includes(q) ||
+                        this.formatDate(appointment.appointment_date).toLowerCase().includes(q) ||
+                        this.formatTime(appointment.slot.slot_time).toLowerCase().includes(q) ||
+                        (this.past && appointment.status.toLowerCase().includes(q))
+                    );
+                });
+            },
+        },
         watch: {
+            showViewPatientTreatmentModal: 'updateScrollLock',
             showViewPatientHistoryModal: 'updateScrollLock',
             showCompleteAppointmentModal: 'updateScrollLock',
             showCancelAppointmentModal: 'updateScrollLock',
@@ -295,12 +350,45 @@
                     this.loading = false;
                 }
             },
-            formatHour(hour, minute) {
-                const suffix = hour >= 12 ? "pm" : "am";
-                const normalizedHour = hour % 12 || 12;
-                const paddedHour = normalizedHour.toString().padStart(2, "0");
-                const paddedMinute = minute.toString().padStart(2, "0");
-                return `${paddedHour}:${paddedMinute}${suffix}`;
+            formatGender(value) {
+                if (!value) return "";
+                return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+            },
+            formatAge(dob) {
+                if (!dob) return "";
+                const birthDate = new Date(dob);
+                const today = new Date();
+                const diffMs = today - birthDate;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (diffDays < 1) return "Less than a day";
+                let years = today.getFullYear() - birthDate.getFullYear();
+                let months = today.getMonth() - birthDate.getMonth();
+                let days = today.getDate() - birthDate.getDate();
+                if (days < 0) {
+                    months--;
+                    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                    days += prevMonth.getDate();
+                }
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+                if (years > 0) {
+                    return `${years} year${years > 1 ? "s" : ""}`;
+                } else if (months > 0) {
+                    return `${months} month${months > 1 ? "s" : ""}`;
+                } else if (days > 0) {
+                    return `${days} day${days > 1 ? "s" : ""}`;
+                } else {
+                    return "Less than a day";
+                }
+            },
+            formatPhoneNumber(phone) {
+                if (!phone) return "";
+                const country = phone.slice(0, 3);
+                const firstPart = phone.slice(3, 8);
+                const lastPart = phone.slice(8);
+                return `${country} ${firstPart} ${lastPart}`;
             },
             formatDate(appointment_date) {
                 if (!appointment_date) return "";
@@ -320,6 +408,13 @@
                 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
                 return days[date.getDay()];
             },
+            formatHour(hour, minute) {
+                const suffix = hour >= 12 ? "pm" : "am";
+                const normalizedHour = hour % 12 || 12;
+                const paddedHour = normalizedHour.toString().padStart(2, "0");
+                const paddedMinute = minute.toString().padStart(2, "0");
+                return `${paddedHour}:${paddedMinute}${suffix}`;
+            },
             formatTime(slot_time) {
                 if (!slot_time) return "";
                 let [hour, minute] = slot_time.split(":").map(Number);
@@ -329,8 +424,19 @@
                 const end = this.formatHour(endHour, minute);
                 return `${start} - ${end}`;
             },
+            formatStatus(status) {
+                return status.charAt(0).toUpperCase() + status.slice(1);
+            },
             updateScrollLock() {
-                handleScrollLock([this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
+                handleScrollLock([this.showViewPatientTreatmentModal, this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
+            },
+            openViewPatientTreatmentModal(appointment) {
+                this.selectedAppointment = appointment;
+                this.showViewPatientTreatmentModal = true;
+            },
+            closeViewPatientTreatmentModal() {
+                this.showViewPatientTreatmentModal = false;
+                this.selectedAppointment = null;
             },
             async openViewPatientHistoryModal(appointment) {
                 this.rowLoading[appointment.appointment_id] = true;
@@ -358,7 +464,7 @@
                 this.selectedPatientTreatments = [];
                 this.errorMessage = "";
                 this.$nextTick(() => {
-                    handleScrollLock([this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
+                    handleScrollLock([this.showViewPatientTreatmentModal, this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
                 });
             },
             openCompleteAppointmentModal(appointment) {
@@ -375,7 +481,7 @@
                 this.form.notes = "";
                 this.clearAllErrors();
                 this.$nextTick(() => {
-                    handleScrollLock([this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
+                    handleScrollLock([this.showViewPatientTreatmentModal, this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
                 });
             },
             openCancelAppointmentModal(appointment) {
@@ -387,7 +493,7 @@
                 this.selectedAppointment = null;
                 this.errorMessage = "";
                 this.$nextTick(() => {
-                    handleScrollLock([this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
+                    handleScrollLock([this.showViewPatientTreatmentModal, this.showViewPatientHistoryModal, this.showCompleteAppointmentModal, this.showCancelAppointmentModal]);
                 });
             },
             clearAllErrors() {
@@ -403,6 +509,14 @@
 </script>
 
 <style scoped>
+    .search-bar {
+        width: 100%;
+        max-width: 300px;
+    }
+    .input-group .form-control{
+        outline: none !important;
+        box-shadow: none !important;
+    }
     .modal-header .btn-close {
         filter: invert(1) brightness(200%);
         opacity: 1;

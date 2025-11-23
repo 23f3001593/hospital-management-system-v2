@@ -51,7 +51,7 @@
             </div>
         </div>
         <div v-if="showReadPatientModal" class="modal fade show d-block" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-md modal-dialog-centered">
                 <div class="modal-content rounded-4 shadow-lg">
                     <div class="modal-header bg-primary">
                         <h3 class="modal-title fw-bold">{{ selectedPatient.user.full_name }}</h3>

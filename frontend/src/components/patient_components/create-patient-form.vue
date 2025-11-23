@@ -1,5 +1,5 @@
 <template>
-    <div class="register-container my-5">
+    <div class="register-container">
         <div class="register-card">
             <h1 class="text-center mb-4 text-primary fw-bold">Sign Up</h1>
             <form @submit.prevent="registerPatient">

@@ -6,11 +6,14 @@
                     <img src="@/assets/dummy.png" alt="dummy" class="header-logo"/>
                 </router-link>            
                 <div class="ms-auto d-flex align-items-center">
-                    <router-link to="/doctor" class="btn me-2" :class="{'btn-primary':isActive('/doctor'), 'btn-outline-primary':!isActive('/doctor')}">
+                    <router-link to="/doctor" class="btn me-3" :class="{'btn-primary':isActive('/doctor'), 'btn-outline-primary':!isActive('/doctor')}">
                         Home
                     </router-link>
-                    <router-link to="/doctor/availability" class="btn me-2" :class="{'btn-primary':isActive('/doctor/availability'), 'btn-outline-primary':!isActive('/doctor/availability')}">
+                    <router-link to="/doctor/availability" class="btn me-3" :class="{'btn-primary':isActive('/doctor/availability'), 'btn-outline-primary':!isActive('/doctor/availability')}">
                         Availability
+                    </router-link>
+                    <router-link to="/doctor/history" class="btn me-3" :class="{'btn-primary':isActive('/doctor/history'), 'btn-outline-primary':!isActive('/doctor/history')}">
+                        History
                     </router-link>
                     <div class="dropdown ms-3">
                         <a class="text-white d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">

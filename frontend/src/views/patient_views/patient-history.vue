@@ -3,47 +3,42 @@
         <div class="spinner-grow" role="status"></div>
     </div>
     <div v-else>
-        <AppointmentsTablePatient :past="false" title="Scheduled Appointments" :appointments="appointments" @appointmentsChanged="fetchData"/>
-        <DepartmentsGridPatient title="Departments" :departments="departments"/>
+        <AppointmentsTablePatient :past="true" title="Appointments History" :appointments="appointments"/>
     </div>
 </template>
 
 <script>
     import axios from "axios";
     import AppointmentsTablePatient from "@/components/patient_components/appointments-table-patient.vue";
-    import DepartmentsGridPatient from "@/components/patient_components/departments-grid-patient.vue";
     export default {
-        name: "PatientHome",
-        components: { DepartmentsGridPatient, AppointmentsTablePatient },
+        name: "PatientHistory",
+        components: { AppointmentsTablePatient },
         data() {
             return {
                 appointments: [],
-                departments: [],
                 loading: false,
             };
         },
         methods: {
-            async fetchData() {
+            async fetchAppointments() {
                 this.loading = true;
                 const id = this.$store.state.user.id;
-                const res1 = await axios.get(`/patient/appointments/scheduled/${id}`);
-                this.appointments = res1.data.appointments || [];
+                const response = await axios.get(`/patient/appointments/past/${id}`);
+                this.appointments = response.data.appointments || [];
                 this.appointments.sort((a, b) => {
                     const dateA = new Date(a.appointment_date);
                     const dateB = new Date(b.appointment_date);
-                    if (dateA < dateB) return -1;
-                    if (dateA > dateB) return 1;
+                    if (dateA > dateB) return -1;
+                    if (dateA < dateB) return 1;
                     const timeA = a.slot?.slot_time || "";
                     const timeB = b.slot?.slot_time || "";
-                    return timeA.localeCompare(timeB);
+                    return timeB.localeCompare(timeA);
                 });
-                const res2 = await axios.get("/admin/departments");
-                this.departments = res2.data.departments || [];
                 this.loading = false;
             },
         },
         mounted() {
-            this.fetchData();
+            this.fetchAppointments();
         },
     };
 </script>

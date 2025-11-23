@@ -6,11 +6,14 @@
                     <img src="@/assets/dummy.png" alt="dummy" class="header-logo"/>
                 </router-link>            
                 <div class="ms-auto d-flex align-items-center">
-                    <router-link to="/patient" class="btn me-2" :class="{'btn-primary':isActive('/patient'), 'btn-outline-primary':!isActive('/patient')}">
+                    <router-link to="/patient" class="btn me-3" :class="{'btn-primary':isActive('/patient'), 'btn-outline-primary':!isActive('/patient')}">
                         Home
                     </router-link>
-                    <router-link to="/patient/treatments" class="btn me-2" :class="{'btn-primary':isActive('/patient/treatments'), 'btn-outline-primary':!isActive('/patient/treatments')}">
+                    <router-link to="/patient/treatments" class="btn me-3" :class="{'btn-primary':isActive('/patient/treatments'), 'btn-outline-primary':!isActive('/patient/treatments')}">
                         Treatments
+                    </router-link>
+                    <router-link to="/patient/history" class="btn me-3" :class="{'btn-primary':isActive('/patient/history'), 'btn-outline-primary':!isActive('/patient/history')}">
+                        History
                     </router-link>
                     <div class="dropdown ms-3">
                         <a class="text-white d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Profile">

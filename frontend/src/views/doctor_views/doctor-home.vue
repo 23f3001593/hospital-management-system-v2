@@ -3,8 +3,8 @@
         <div class="spinner-grow" role="status"></div>
     </div>
     <div v-else>
-        <AppointmentsTableDoctor :today="true" title="Scheduled Appointments for Today" :appointments="today_appointments" @appointmentsChanged="fetchAppointments"/>
-        <AppointmentsTableDoctor :today="false" title="Scheduled Appointments for Week" :appointments="week_appointments" @appointmentsChanged="fetchAppointments"/>
+        <AppointmentsTableDoctor :past="false" :today="true" title="Scheduled Appointments for Today" :appointments="today_appointments" @appointmentsChanged="fetchAppointments"/>
+        <AppointmentsTableDoctor :past="false" :today="false" title="Scheduled Appointments for Week" :appointments="week_appointments" @appointmentsChanged="fetchAppointments"/>
     </div>
 </template>
 
@@ -25,7 +25,7 @@
             async fetchAppointments() {
                 this.loading = true;
                 const id = this.$store.state.user.id;
-                const response = await axios.get(`/doctor/appointments/${id}`);
+                const response = await axios.get(`/doctor/appointments/scheduled/${id}`);
                 const appointments = response.data.appointments || [];
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);

@@ -2,6 +2,7 @@ import PatientDashboard from "@/views/patient_views/patient-dashboard.vue";
 import PatientHome from "@/views/patient_views/patient-home.vue";
 import DepartmentOverview from "@/views/patient_views/department-overview.vue";
 import TreatmentsOverview from "@/views/patient_views/treatments-overview.vue";
+import PatientHistory from "@/views/patient_views/patient-history.vue";
 import UpdatePatient from "@/views/patient_views/update-patient.vue";
 
 export default [{
@@ -12,6 +13,7 @@ export default [{
         { path: "", component: PatientHome },
         { path: "department/:id", component: DepartmentOverview, name: 'DepartmentOverview'},
         { path: "treatments", component: TreatmentsOverview },
+        { path: "history", component: PatientHistory },
         { path: "account", component: UpdatePatient },
     ],
 }];

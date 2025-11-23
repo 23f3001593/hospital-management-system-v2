@@ -2,6 +2,10 @@
     <div class="container my-5">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 class="mb-0 fw-bold">{{ title }}</h2>
+            <div v-if="past" class="input-group search-bar">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" v-model="searchQuery" class="form-control" placeholder="Type to search..."/>
+            </div>
         </div>
         <div class="card">
             <div class="card-body p-0">
@@ -13,20 +17,24 @@
                                 <th scope="col">Department</th>
                                 <th scope="col">Doctor</th>
                                 <th scope="col">Date</th>
-                                <th scope="col">Day</th>
+                                <th v-if="!past" scope="col">Day</th>
                                 <th scope="col">Time</th>
-                                <th scope="col">Actions</th>
+                                <th v-if="past" scope="col">Fees</th>
+                                <th v-if="past" scope="col">Status</th>
+                                <th v-if="!past" scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(appointment,index) in appointments" :key="appointment.appointment_id">
+                            <tr v-for="(appointment,index) in filteredAppointments" :key="appointment.appointment_id">
                                 <td>{{ index + 1 }}</td>
                                 <td>{{ appointment.doctor.department.department_name }}</td>
                                 <td>{{ appointment.doctor.user.full_name }}</td>
                                 <td>{{ formatDate(appointment.appointment_date) }}</td>
-                                <td>{{ formatDay(appointment.appointment_date) }}</td>
+                                <td v-if="!past">{{ formatDay(appointment.appointment_date) }}</td>
                                 <td>{{ formatTime(appointment.slot.slot_time) }}</td>
-                                <td>
+                                <td v-if="past">{{ formatFees(appointment.doctor.fees) }}</td>
+                                <td v-if="past" :class="{'text-success': appointment.status === 'completed','text-danger': appointment.status === 'cancelled'}">{{ formatStatus(appointment.status) }}</td>
+                                <td v-if="!past">
                                     <button type="button" class="btn btn-sm btn-primary position-relative me-2" :disabled="rowLoading[appointment.appointment_id]" @click="openRescheduleAppointmentModal(appointment)">
                                         <span class="d-inline-block text-center w-100" :class="{ 'invisible': rowLoading[appointment.appointment_id] }">Reschedule</span>
                                         <div v-show="rowLoading[appointment.appointment_id]" class="position-absolute top-50 start-50 translate-middle">
@@ -34,6 +42,11 @@
                                         </div>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-danger" @click="openCancelAppointmentModal(appointment)">Cancel</button>
+                                </td>
+                            </tr>
+                            <tr v-if="past && appointments.length > 0 && filteredAppointments.length === 0">
+                                <td colspan="7" class="text-muted fst-italic">
+                                    No matching records found.
                                 </td>
                             </tr>
                             <tr v-if="appointments.length === 0">
@@ -139,10 +152,12 @@
         props: {
             title: String,
             appointments: Array,
+            past: Boolean,
         },
         data() {
             return {
                 selectedAppointment: null,
+                searchQuery: "",
                 showRescheduleAppointmentModal: false,
                 showCancelAppointmentModal: false,
                 editableSlot: {},
@@ -153,6 +168,22 @@
                 loading: false,
                 rowLoading: {},
             };
+        },
+        computed: {
+            filteredAppointments() {
+                if (!this.past || !this.searchQuery.trim()) return this.appointments;
+                const q = this.searchQuery.toLowerCase();
+                return this.appointments.filter((appointment) => {
+                    return (
+                        appointment.doctor.department.department_name.toLowerCase().includes(q) ||
+                        appointment.doctor.user.full_name.toLowerCase().includes(q) ||
+                        this.formatDate(appointment.appointment_date).toLowerCase().includes(q) ||
+                        this.formatTime(appointment.slot.slot_time).toLowerCase().includes(q) ||
+                        String(this.formatFees(appointment.doctor.fees)).toLowerCase().includes(q) ||
+                        (this.past && appointment.status.toLowerCase().includes(q))
+                    );
+                });
+            },
         },
         watch: {
             showRescheduleAppointmentModal: 'updateScrollLock',
@@ -259,13 +290,6 @@
                 target.setDate(monday.getDate() + dayIndex);
                 return target;
             },
-            formatHour(hour, minute) {
-                const suffix = hour >= 12 ? "pm" : "am";
-                const normalizedHour = hour % 12 || 12;
-                const paddedHour = normalizedHour.toString().padStart(2, "0");
-                const paddedMinute = minute.toString().padStart(2, "0");
-                return `${paddedHour}:${paddedMinute}${suffix}`;
-            },
             formatDate(appointment_date) {
                 if (!appointment_date) return "";
                 const date = new Date(appointment_date);
@@ -278,6 +302,13 @@
                 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
                 return days[date.getDay()];
             },
+            formatHour(hour, minute) {
+                const suffix = hour >= 12 ? "pm" : "am";
+                const normalizedHour = hour % 12 || 12;
+                const paddedHour = normalizedHour.toString().padStart(2, "0");
+                const paddedMinute = minute.toString().padStart(2, "0");
+                return `${paddedHour}:${paddedMinute}${suffix}`;
+            },
             formatTime(slot_time) {
                 if (!slot_time) return "";
                 let [hour, minute] = slot_time.split(":").map(Number);
@@ -286,6 +317,13 @@
                 if (endHour === 24) endHour = 0;
                 const end = this.formatHour(endHour, minute);
                 return `${start} - ${end}`;
+            },
+            formatFees(fees) {
+                if (fees == null || isNaN(fees)) return "";
+                return `₹${parseFloat(fees).toFixed(2)}`;
+            },
+            formatStatus(status) {
+                return status.charAt(0).toUpperCase() + status.slice(1);
             },
             slotIndexFromTime(timeStr) {
                 if (!timeStr) return -1;
@@ -350,3 +388,14 @@
         },
     };
 </script>
+
+<style scoped>
+    .search-bar {
+        width: 100%;
+        max-width: 300px;
+    }
+    .input-group .form-control{
+        outline: none !important;
+        box-shadow: none !important;
+    }
+</style>
