@@ -216,6 +216,16 @@ class PatientServices:
         return appointments
     
     @staticmethod
+    def all_past_appointments(id):
+        user = User.query.get(id)
+        if not user or not hasattr(user, "patient") or not user.patient:
+            raise NotFoundError("Patient not found.")
+        if user.is_archived:
+            raise NotFoundError("Patient not found.")
+        appointments = Appointment.query.filter(Appointment.patient_id==user.patient.patient_id, Appointment.status!="booked").all()
+        return appointments
+    
+    @staticmethod
     def all_treatments(id):
         user = User.query.get(id)
         if not user or not hasattr(user, "patient") or not user.patient:

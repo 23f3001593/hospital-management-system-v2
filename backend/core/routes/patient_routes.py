@@ -79,10 +79,20 @@ def delete_appointment(appointment_id):
     except Exception:
         return jsonify({"message":"Something went wrong. Please try again later."}),500
 
-@patient_bp.route('/appointments/<int:id>', methods=['GET'])
+@patient_bp.route('/appointments/scheduled/<int:id>', methods=['GET'])
 def all_scheduled_appointments(id):
     try:
         appointments = PatientServices.all_scheduled_appointments(id)
+        return jsonify({"appointments": [appointment.to_dict(include_doctor=True, include_slot=True) for appointment in appointments]}),200
+    except (NotFoundError) as e:
+        return e.get_response()
+    except Exception:
+        return jsonify({"message":"Something went wrong. Please try again later."}),500
+
+@patient_bp.route('/appointments/past/<int:id>', methods=['GET'])
+def all_past_appointments(id):
+    try:
+        appointments = PatientServices.all_past_appointments(id)
         return jsonify({"appointments": [appointment.to_dict(include_doctor=True, include_slot=True) for appointment in appointments]}),200
     except (NotFoundError) as e:
         return e.get_response()

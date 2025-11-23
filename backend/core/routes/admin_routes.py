@@ -124,8 +124,8 @@ def all_appointments():
     try:
         scheduled_appointments,past_appointments = AdminServices.all_appointments()
         return jsonify({
-            "scheduled_appointments": [appointment.to_dict(include_doctor=True, include_patient=True) for appointment in scheduled_appointments],
-            "past_appointments": [appointment.to_dict(include_doctor=True, include_patient=True, include_treatment=True) for appointment in past_appointments]
+            "scheduled_appointments": [appointment.to_dict(include_doctor=True, include_patient=True, include_slot=True) for appointment in scheduled_appointments],
+            "past_appointments": [appointment.to_dict(include_doctor=True, include_patient=True, include_slot=True) for appointment in past_appointments]
         }),200
     except Exception:
         return jsonify({"message":"Something went wrong. Please try again later."}),500
