@@ -111,3 +111,9 @@ def all_treatments(id):
         return e.get_response()
     except Exception:
         return jsonify({"message":"Something went wrong. Please try again later."}),500
+
+@patient_bp.route('/treatments/export/<int:id>', methods=['POST'])
+def all_treatments_export(id):
+    from core.jobs.patient_jobs import send_treatments_history
+    send_treatments_history.delay(id)
+    return jsonify({"message":"Export started. You will receive an email shortly."}),202

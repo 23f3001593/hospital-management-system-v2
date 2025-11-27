@@ -2,6 +2,12 @@
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0 fw-bold">{{ title }}</h2>
+            <button type="button" class="btn btn-primary position-relative me-2" :disabled="loading" @click="exportTreatmentsHistory">
+                <span class="d-inline-block text-center w-100" :class="{ 'invisible': loading }">Export as CSV</span>
+                <div v-show="loading" class="position-absolute top-50 start-50 translate-middle">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                </div>
+            </button>
         </div>
         <div v-for="treatment in treatments" :key="treatment.treatment_id" class="mb-4">
             <div class="card h-100">
@@ -26,13 +32,32 @@
 </template>
 
 <script>
+    import axios from "axios";
+    import { showToast } from "@/utils/toast.js";
     export default {
         name: "TreatmentsGrid",
         props: {
             title: String,
             treatments: Array,
         },
+        data() {
+            return {
+                loading: false,
+            };
+        },
         methods: {
+            async exportTreatmentsHistory() {
+                this.loading = true;
+                try {
+                    const id = this.$store.state.user.id;
+                    const response = await axios.post(`/patient/treatments/export/${id}`);
+                    showToast(response.data.message,'primary');
+                } catch (error) {
+                    showToast("Something went wrong. Please try again later.",'danger');
+                } finally {
+                    this.loading = false;
+                }
+            },
             formatDate(appointment_date) {
                 if (!appointment_date) return "";
                 const date = new Date(appointment_date);

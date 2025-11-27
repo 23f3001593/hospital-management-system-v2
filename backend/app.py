@@ -1,6 +1,6 @@
 from flask import Flask
 from core.config import Config
-from core.extensions import db,bcrypt,jwt,cors
+from core.extensions import db,bcrypt,jwt,cors,mail
 from core.models.models import create_admin
 from core.routes.auth_routes import auth_bp
 from core.routes.admin_routes import admin_bp
@@ -15,6 +15,7 @@ def create_app():
     bcrypt.init_app(app)
     jwt.init_app(app)
     cors.init_app(app,origins=["http://localhost:5173"])
+    mail.init_app(app)
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")

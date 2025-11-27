@@ -3,7 +3,7 @@
         <div class="spinner-grow" role="status"></div>
     </div>
     <div v-else>
-        <TreatmentsGrid title="Medical History" :treatments="treatments"/>
+        <TreatmentsGrid title="Treatments History" :treatments="treatments"/>
     </div>
 </template>
 
