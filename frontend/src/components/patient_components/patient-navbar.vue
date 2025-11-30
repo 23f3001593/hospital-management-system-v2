@@ -3,7 +3,7 @@
         <nav class="navbar navbar-expand-lg">
             <div class="container">
                 <router-link to="/patient" class="navbar-brand">
-                    <img src="@/assets/dummy.png" alt="dummy" class="header-logo"/>
+                    <img src="@/assets/logo.png" alt="MediFlow" class="header-logo"/>
                 </router-link>            
                 <div class="ms-auto d-flex align-items-center">
                     <router-link to="/patient" class="btn me-3" :class="{'btn-primary':isActive('/patient'), 'btn-outline-primary':!isActive('/patient')}">

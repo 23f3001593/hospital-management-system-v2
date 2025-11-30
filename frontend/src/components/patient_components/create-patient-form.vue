@@ -371,7 +371,7 @@
                     };
                     const response = await axios.post('/patient', payload);
                     await this.$store.dispatch("login", {
-                        username: response.data.username,
+                        username: response.data.user.username,
                         password: this.form.password,
                     })
                     const role = this.$store.state.user.role

@@ -10,9 +10,9 @@ def login():
     try:
         data = request.json
         user = AuthServices.authenticate_user(data)
-        access_token = create_access_token(identity=str(user.id))
-        refresh_token = create_refresh_token(identity=str(user.id))
-        return jsonify({"access_token":access_token, "refresh_token":refresh_token, "user":user.to_dict()}),200
+        access_token = create_access_token(identity=str(user['id']))
+        refresh_token = create_refresh_token(identity=str(user['id']))
+        return jsonify({"user":user, "access_token":access_token, "refresh_token":refresh_token}),200
     except (ValidationError,NotFoundError,MissingFieldsError) as e:
         return e.get_response()
     except Exception:

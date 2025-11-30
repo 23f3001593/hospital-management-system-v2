@@ -9,7 +9,7 @@ class AdminServices:
     @staticmethod
     def read_admin():
         admin = User.query.filter_by(role='admin').first()
-        return admin
+        return admin.to_dict()
 
     @staticmethod
     def update_admin(data):
@@ -37,7 +37,7 @@ class AdminServices:
         if data['new_password']:
             admin.password = data['new_password']
         db.session.commit()
-        return {"message":"Profile updated successfully."}
+        return {"message":"Profile updated successfully.", "data": admin.to_dict()}
 
     @staticmethod
     def create_department(data):
@@ -53,14 +53,14 @@ class AdminServices:
         new_department = Department(department_name=data['department_name'], department_description=data['department_description'])
         db.session.add(new_department)
         db.session.commit()
-        return {"message":"Department created successfully."}
+        return {"message":"Department created successfully.", "data": new_department.to_dict()}
     
     @staticmethod
     def read_department(department_id):
         department = Department.query.get(department_id)
         if not department:
             raise NotFoundError("Department not found.")
-        return department
+        return department.to_dict(include_doctors=True)
     
     @staticmethod
     def update_department(department_id, data):
@@ -80,7 +80,7 @@ class AdminServices:
         department.department_name = data['department_name']
         department.department_description = data['department_description']
         db.session.commit()
-        return {"message":"Department updated successfully."}
+        return {"message":"Department updated successfully.", "data": department.to_dict()}
     
     @staticmethod
     def delete_department(department_id):
@@ -94,13 +94,16 @@ class AdminServices:
             raise ValidationError("Cannot delete department: An active doctor is assigned to it.")
         department.is_archived = True
         db.session.commit()
-        return {"message":"Department deleted successfully."}
+        return {"message":"Department deleted successfully.", "data": department.to_dict()}
     
     @staticmethod
     def all_departments():
         departments = Department.query.filter(Department.is_archived==False).all()
         archived_departments = Department.query.filter_by(is_archived=True).all()
-        return departments,archived_departments
+        return {
+            "departments": [department.to_dict(include_doctors=True) for department in departments],
+            "archived_departments": [department.to_dict(include_doctors=True) for department in archived_departments]
+        }
 
     @staticmethod
     def assign_hod(department_id, doctor_id):
@@ -109,7 +112,7 @@ class AdminServices:
             raise NotFoundError("Department not found.")
         department.hod_id = doctor_id
         db.session.commit()
-        return {"message":"HOD assigned successfully."}
+        return {"message":"HOD assigned successfully.", "data": department.to_dict()}
     
     @staticmethod
     def create_doctor(data):
@@ -161,22 +164,38 @@ class AdminServices:
                 slot = Slot(doctor_id=new_doctor.doctor_id, week_day=day, slot_time=slot_time)
                 db.session.add(slot)
         db.session.commit()
-        return {"message":"Doctor created successfully."}
+        return {"message":"Doctor created successfully.", "data": new_doctor.to_dict(include_user=True, include_department=True, include_availabilities=True, include_slots=True)}
 
     @staticmethod
     def all_doctors():
         doctors = Doctor.query.filter(Doctor.user.has(is_archived=False)).all()
         archived_doctors = Doctor.query.filter(Doctor.user.has(is_archived=True)).all()
-        return doctors,archived_doctors
+        return {
+            "doctors": [doctor.to_dict(include_user=True, include_department=True) for doctor in doctors],
+            "archived_doctors": [doctor.to_dict(include_user=True, include_department=True) for doctor in archived_doctors]
+        }
     
     @staticmethod
     def all_patients():
         patients = Patient.query.filter(Patient.user.has(is_archived=False)).all()
         archived_patients = Patient.query.filter(Patient.user.has(is_archived=True)).all()
-        return patients,archived_patients
+        return {
+            "patients": [patient.to_dict(include_user=True) for patient in patients],
+            "archived_patients": [patient.to_dict(include_user=True) for patient in archived_patients]
+        }
     
     @staticmethod
     def all_appointments():
         scheduled_appointments = Appointment.query.filter_by(status="booked").all()
         past_appointments = Appointment.query.filter(Appointment.status!="booked").all()
-        return scheduled_appointments,past_appointments
+        return {
+            "scheduled_appointments": [appointment.to_dict(include_doctor=True, include_patient=True, include_slot=True) for appointment in scheduled_appointments],
+            "past_appointments": [appointment.to_dict(include_doctor=True, include_patient=True, include_slot=True) for appointment in past_appointments]
+        }
+    
+    @staticmethod
+    def admin_summary():
+        doctor_count = User.query.filter_by(role="doctor", is_archived=False).count()
+        patient_count = User.query.filter_by(role="patient", is_archived=False).count()
+        appointment_count = Appointment.query.filter_by(status="booked").count()
+        return {"doctor_count": doctor_count, "patient_count": patient_count, "appointment_count": appointment_count}

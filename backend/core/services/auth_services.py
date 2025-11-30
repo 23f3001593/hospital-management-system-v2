@@ -14,4 +14,4 @@ class AuthServices:
             raise NotFoundError("Invalid username or password.")
         if not user.check_password(data['password']):
             raise ValidationError("Invalid username or password.")
-        return user
+        return user.to_dict()

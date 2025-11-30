@@ -2,7 +2,7 @@ import os
 from datetime import time,datetime
 from werkzeug.utils import secure_filename
 from core.extensions import db
-from core.models.models import User,Patient,Slot,Appointment,Treatment
+from core.models.models import User,Doctor,Patient,Slot,Appointment,Treatment
 from core.utils.exceptions import ValidationError,NotFoundError,AlreadyExistError,MissingFieldsError
 
 UPLOAD_FOLDER = "core/static/uploads/patients"
@@ -37,7 +37,7 @@ class PatientServices:
         new_patient = Patient(user_id=new_user.id, dob=dob, gender=data['gender'], address=data['address'], pincode=data['pincode'])
         db.session.add(new_patient)
         db.session.commit()
-        return new_user
+        return new_patient.to_dict(include_user=True)
     
     @staticmethod
     def read_patient(id):
@@ -47,7 +47,7 @@ class PatientServices:
         if user.is_archived:
             raise NotFoundError("Patient not found.")
         patient = Patient.query.get(user.patient.patient_id)
-        return patient
+        return patient.to_dict(include_user=True)
 
     @staticmethod
     def update_patient(id, data, file):
@@ -106,7 +106,18 @@ class PatientServices:
         if data['new_password']:
             user.password = data['new_password']
         db.session.commit()
-        return {"message":"Profile updated successfully."}
+        doctor_user_ids = [row[0]
+            for row in db.session.query(User.id)
+                .join(Doctor, Doctor.user_id == User.id)
+                .join(Appointment, Appointment.doctor_id == Doctor.doctor_id)
+                .filter(
+                    Appointment.patient_id == user.patient.patient_id,
+                    Appointment.status == "booked"
+                )
+                .distinct()
+                .all()
+        ]
+        return {"message":"Profile updated successfully.", "data": user.patient.to_dict(include_user=True), "doctor_user_ids": doctor_user_ids}
     
     @staticmethod
     def delete_patient(id):
@@ -126,7 +137,7 @@ class PatientServices:
             user.profile_picture = None
         user.is_archived = True
         db.session.commit()
-        return {"message":"Account deleted successfully."}
+        return {"message":"Account deleted successfully.", "data": user.patient.to_dict(include_user=True)}
     
     @staticmethod
     def create_appointment(data, id, doctor_id):
@@ -159,7 +170,7 @@ class PatientServices:
         new_appointment = Appointment(patient_id=user.patient.patient_id, doctor_id=doctor_id, slot_id=slot.slot_id, appointment_date=appointment_date)
         db.session.add(new_appointment)
         db.session.commit()
-        return {"message":"Appointment booked successfully."}
+        return {"message":"Appointment booked successfully.", "data": new_appointment.to_dict(include_doctor=True, include_patient=True)}
     
     @staticmethod
     def update_appointment(data, appointment_id):
@@ -191,7 +202,7 @@ class PatientServices:
         appointment.slot_id = slot.slot_id
         appointment.appointment_date = appointment_date
         db.session.commit()
-        return {"message":"Appointment rescheduled successfully."}
+        return {"message":"Appointment rescheduled successfully.", "data": appointment.to_dict(include_doctor=True, include_patient=True)}
     
     @staticmethod
     def delete_appointment(appointment_id):
@@ -203,7 +214,7 @@ class PatientServices:
         appointment.slot.status = "available"
         appointment.status = "cancelled"
         db.session.commit()
-        return {"message":"Appointment cancelled successfully."}
+        return {"message":"Appointment cancelled successfully.", "data": appointment.to_dict(include_doctor=True, include_patient=True)}
 
     @staticmethod
     def all_scheduled_appointments(id):
@@ -213,7 +224,7 @@ class PatientServices:
         if user.is_archived:
             raise NotFoundError("Patient not found.")
         appointments = Appointment.query.filter_by(patient_id=user.patient.patient_id, status="booked").all()
-        return appointments
+        return {"appointments": [appointment.to_dict(include_doctor=True, include_slot=True) for appointment in appointments]}
     
     @staticmethod
     def all_past_appointments(id):
@@ -223,7 +234,7 @@ class PatientServices:
         if user.is_archived:
             raise NotFoundError("Patient not found.")
         appointments = Appointment.query.filter(Appointment.patient_id==user.patient.patient_id, Appointment.status!="booked").all()
-        return appointments
+        return {"appointments": [appointment.to_dict(include_doctor=True, include_slot=True) for appointment in appointments]}
     
     @staticmethod
     def all_treatments(id):
@@ -233,4 +244,7 @@ class PatientServices:
         if user.is_archived:
             raise NotFoundError("Patient not found.")
         treatments = Treatment.query.join(Appointment).filter(Appointment.patient_id == user.patient.patient_id).all()
-        return treatments
+        return {"treatments": [{
+            **treatment.to_dict(include_appointment=True),
+            "doctor": treatment.appointment.doctor.to_dict(include_user=True, include_department=True)
+        } for treatment in treatments]}

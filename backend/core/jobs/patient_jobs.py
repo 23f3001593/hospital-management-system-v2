@@ -55,6 +55,8 @@ def send_treatments_history(id):
     user = User.query.get(id)
     if not user or not hasattr(user, "patient") or not user.patient:
         return "Patient not found."
+    if user.is_archived:
+        return "Patient not found."
     treatments = (
         Treatment.query
         .join(Appointment, Treatment.appointment_id == Appointment.appointment_id)

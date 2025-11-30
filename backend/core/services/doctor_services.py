@@ -3,7 +3,7 @@ from datetime import time
 from decimal import Decimal,InvalidOperation
 from werkzeug.utils import secure_filename
 from core.extensions import db
-from core.models.models import User,Doctor,Availability,Appointment,Treatment
+from core.models.models import User,Doctor,Patient,Availability,Appointment,Treatment
 from core.utils.exceptions import ValidationError,NotFoundError,AlreadyExistError,MissingFieldsError
 
 UPLOAD_FOLDER = "core/static/uploads/doctors"
@@ -18,7 +18,7 @@ class DoctorServices:
             raise NotFoundError("Doctor not found.")
         if user.is_archived:
             raise NotFoundError("Doctor not found.")
-        return user.doctor
+        return user.doctor.to_dict(include_user=True, include_department=True)
 
     @staticmethod
     def update_doctor(id, data, file):
@@ -79,7 +79,18 @@ class DoctorServices:
         if data['new_password']:
             user.password = data['new_password']
         db.session.commit()
-        return {"message":"Profile updated successfully."}
+        patient_user_ids = [row[0]
+            for row in db.session.query(User.id)
+                .join(Patient, Patient.user_id == User.id)
+                .join(Appointment, Appointment.patient_id == Patient.patient_id)
+                .filter(
+                    Appointment.doctor_id == user.doctor.doctor_id,
+                    Appointment.status == "booked"
+                )
+                .distinct()
+                .all()
+        ]
+        return {"message":"Profile updated successfully.", "data": user.doctor.to_dict(include_user=True, include_department=True), "patient_user_ids": patient_user_ids}
     
     @staticmethod
     def delete_doctor(id):
@@ -99,7 +110,7 @@ class DoctorServices:
             user.profile_picture = None
         user.is_archived = True
         db.session.commit()
-        return {"message":"Account deleted successfully."}
+        return {"message":"Account deleted successfully.", "data": user.doctor.to_dict(include_user=True, include_department=True)}
     
     @staticmethod
     def read_availability(id):
@@ -108,8 +119,7 @@ class DoctorServices:
             raise NotFoundError("Doctor not found.")
         if user.is_archived:
             raise NotFoundError("Doctor not found.")
-        availability_dict = {availability.week_day: [availability.forenoon_slot, availability.afternoon_slot] for availability in user.doctor.availabilities}
-        return availability_dict
+        return {availability.week_day: [availability.forenoon_slot, availability.afternoon_slot] for availability in user.doctor.availabilities}
     
     @staticmethod
     def update_availability(id, data):
@@ -125,7 +135,7 @@ class DoctorServices:
             availability.forenoon_slot = bool(forenoon_slot)
             availability.afternoon_slot = bool(afternoon_slot)
         db.session.commit()
-        return {"message": "Availability updated successfully."}
+        return {"message": "Availability updated successfully.", "data": user.doctor.to_dict(include_user=True, include_department=True, include_availabilities=True)}
     
     @staticmethod
     def read_slot(doctor_id):
@@ -151,7 +161,7 @@ class DoctorServices:
         if user.is_archived:
             raise NotFoundError("Doctor not found.")
         appointments = Appointment.query.filter_by(doctor_id=user.doctor.doctor_id, status="booked").all()
-        return appointments
+        return {"appointments": [appointment.to_dict(include_patient=True, include_slot=True) for appointment in appointments]}
     
     @staticmethod
     def all_past_appointments(id):
@@ -161,7 +171,7 @@ class DoctorServices:
         if user.is_archived:
             raise NotFoundError("Doctor not found.")
         appointments = Appointment.query.filter(Appointment.doctor_id==user.doctor.doctor_id, Appointment.status!="booked").all()
-        return appointments
+        return {"appointments": [appointment.to_dict(include_patient=True, include_slot=True, include_treatment=True) for appointment in appointments]}
     
     @staticmethod
     def create_treatment(appointment_id, data):
@@ -179,4 +189,4 @@ class DoctorServices:
         appointment.slot.status = "available"
         appointment.status = "completed"
         db.session.commit()
-        return {"message":"Appointment completed successfully."}
+        return {"message":"Appointment completed successfully.", "data": new_treatment.to_dict(include_appointment=True), "doctor_user_id": new_treatment.appointment.doctor.user.id, "patient_user_id": new_treatment.appointment.patient.user.id}

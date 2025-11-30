@@ -1,4 +1,5 @@
 import AdminDashboard from "@/views/admin_views/admin-dashboard.vue";
+import AdminHome from "@/views/admin_views/admin-home.vue";
 import DepartmentsOverview from "@/views/admin_views/departments-overview.vue";
 import DoctorsOverview from "@/views/admin_views/doctors-overview.vue";
 import CreateDoctor from "@/views/admin_views/create-doctor.vue";
@@ -11,6 +12,7 @@ export default [{
     component: AdminDashboard,
     meta: { requiresAuth: true },
     children: [
+        { path: "", component: AdminHome },
         { path: "departments", component: DepartmentsOverview },
         { path: "doctors", component: DoctorsOverview },
         { path: "doctor/create", component: CreateDoctor },
