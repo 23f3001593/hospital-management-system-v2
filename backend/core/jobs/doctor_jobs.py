@@ -34,6 +34,8 @@ def send_reports(self):
     first_day_this_month = today.replace(day=1)
     last_day_last_month = first_day_this_month - timedelta(days=1)
     first_day_last_month = last_day_last_month.replace(day=1)
+    # first_day_last_month = first_day_this_month
+    # last_day_last_month = first_day_this_month.replace(day=30)
     doctors = Doctor.query.join(User).filter(User.is_archived==False).all()
     if not doctors:
         return "No doctor found."
@@ -68,10 +70,12 @@ If you have any questions or require further information, please feel free to re
 Warm regards,
 MediFlow
 """
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
         attachments = [{
             "filename": f"monthly_report_{first_day_last_month:%B_%Y}.pdf".lower(),
             "content_type": "application/pdf",
-            "data": pdf_path
+            "data": pdf_bytes
         }]
         send_email(recipient=doctor.user.email, subject=subject, body=body, attachments=attachments)
         os.remove(pdf_path)

@@ -13,33 +13,33 @@ Department (department_name, department_description) = [
 
 Doctor (full_name, email, phone_number, qualifications, license_number, department, practice_start_date, fees, username, password) = [
     # Cardiology – 3 doctors
-    ("Dr. Arjun Singh", "arjun.singh@example.com", "+915555512345", "MBBS, MD (Cardiology), FACC", "INDCARD1234", "Cardiology", "2010-06-15", 800, "dr_arjun_singh", "Arjun@123"),
-    ("Dr. Neha Kapoor", "neha.kapoor@example.com", "+915555523456", "MBBS, DM (Cardiology)", "INDCARD5678", "Cardiology", "2012-03-10", 1000, "dr_neha_kapoor", "Neha#456"),
-    ("Dr. Rajiv Menon", "rajiv.menon@example.com", "+915555534567", "MBBS, MD, Interventional Cardiology", "INDCARD9101", "Cardiology", "2008-11-05", 1200, "dr_rajiv_menon", "Rajiv!789"),
+    ("Dr. Arjun Singh", "arjun.singh@example.com", "+915555512345", "MBBS, DM (Cardiology)", "INDCARD1234", "Cardiology", "2010-06-15", 1000, "arjun_singh", "Arjun!123"),
+    ("Dr. Neha Kapoor", "neha.kapoor@example.com", "+915555523456", "MBBS, MD (Cardiology), FACC", "INDCARD5678", "Cardiology", "2012-03-10", 800, "neha_kapoor", "Neha#456"),
+    ("Dr. Rajiv Menon", "rajiv.menon@example.com", "+915555534567", "MBBS, MD, Interventional Cardiology", "INDCARD9101", "Cardiology", "2008-11-05", 1200, "rajiv_menon", "Rajiv!789"),
 
     # Gastroenterology – 2 doctors
-    ("Dr. Suman Sharma", "suman.sharma@example.com", "+915555545678", "MBBS, MD (Gastroenterology)", "INDGASTRO123", "Gastroenterology", "2011-08-20", 700, "dr_suman_sharma", "Suman#123"),
-    ("Dr. Anil Gupta", "anil.gupta@example.com", "+915555556789", "MBBS, DM (Gastroenterology)", "INDGASTRO456", "Gastroenterology", "2013-05-12", 800, "dr_anil_gupta", "Anil$456"),
+    ("Dr. Suman Sharma", "suman.sharma@example.com", "+915555545678", "MBBS, MD (Gastroenterology)", "INDGASTRO123", "Gastroenterology", "2011-08-20", 700, "suman_sharma", "Suman#123"),
+    ("Dr. Anil Gupta", "anil.gupta@example.com", "+915555556789", "MBBS, DM (Gastroenterology)", "INDGASTRO456", "Gastroenterology", "2013-05-12", 800, "anil_gupta", "Anil$456"),
 
     # Endocrinology – 2 doctors
-    ("Dr. Priya Mehra", "priya.mehra@example.com", "+915555567890", "MBBS, MD (Endocrinology)", "INDENDO123", "Endocrinology", "2014-07-01", 600, "dr_priya_mehra", "Priya!789"),
-    ("Dr. Vikram Saxena", "vikram.saxena@example.com", "+915555578901", "MBBS, DM (Endocrinology), Diabetes Specialist", "INDENDO456", "Endocrinology", "2012-01-15", 700, "dr_vikram_saxena", "Vikram#123"),
+    ("Dr. Priya Mehra", "priya.mehra@example.com", "+915555567890", "MBBS, MD (Endocrinology)", "INDENDO123", "Endocrinology", "2014-07-01", 600, "priya_mehra", "Priya!789"),
+    ("Dr. Vikram Saxena", "vikram.saxena@example.com", "+915555578901", "MBBS, DM (Endocrinology), Diabetes Specialist", "INDENDO456", "Endocrinology", "2012-01-15", 700, "vikram_saxena", "Vikram#123"),
 
     # Orthopedics – 2 doctors
-    ("Dr. Raj Shah", "raj.shah@example.com", "+915555589012", "MBBS, MS (Orthopedics)", "INDORTHO123", "Orthopedics", "2010-09-20", 600, "dr_raj_shah", "Raj@456"),
-    ("Dr. Sneha Verma", "sneha.verma@example.com", "+915555590123", "MBBS, DNB (Orthopedics)", "INDORTHO456", "Orthopedics", "2015-02-10", 650, "dr_sneha_verma", "Sneha!789"),
+    ("Dr. Raj Shah", "raj.shah@example.com", "+915555589012", "MBBS, MS (Orthopedics)", "INDORTHO123", "Orthopedics", "2010-09-20", 600, "raj_shah", "Raj$4567"),
+    ("Dr. Sneha Verma", "sneha.verma@example.com", "+915555590123", "MBBS, DNB (Orthopedics)", "INDORTHO456", "Orthopedics", "2015-02-10", 650, "sneha_verma", "Sneha!789"),
 
     # Neurology – 1 doctor
-    ("Dr. Aman Jain", "aman.jain@example.com", "+915555501234", "MBBS, MD (Neurology), Epilepsy Specialist", "INDNEURO123", "Neurology", "2013-04-25", 900, "dr_aman_jain", "Aman#123"),
+    ("Dr. Aman Jain", "aman.jain@example.com", "+915555501234", "MBBS, MD (Neurology), Epilepsy Specialist", "INDNEURO123", "Neurology", "2013-04-25", 900, "aman_jain", "Aman#123"),
 
     # Oncology – 1 doctor
-    ("Dr. Richa Malik", "richa.malik@example.com", "+915555512345", "MBBS, MD (Oncology), Chemotherapy Specialist", "INDONCO123", "Oncology", "2011-06-18", 1200, "dr_richa_malik", "Richa@456")
+    ("Dr. Richa Malik", "richa.malik@example.com", "+915555500123", "MBBS, MD (Oncology), Chemotherapy Specialist", "INDONCO123", "Oncology", "2011-06-18", 1200, "richa_malik", "Richa$456")
 ]
 
 Patient (full_name, dob, gender, phone_number, email, address, pincode, username, password) = [
     ("Dhruv Patel", "1990-05-15", "male", "+915555501111", "dhruv.patel@example.com", "123, Ashram Road, Ahmedabad, Gujarat", "380001", "dhruv_patel", "Dhruv!123"),
     ("Ananya Singh", "1988-11-22", "female", "+915555502222", "ananya.singh@example.com", "45, Park Street, Kolkata, West Bengal", "700016", "ananya_singh", "Ananya#456"),
-    ("Vikram Joshi", "1995-08-30", "male", "+915555503333", "vikram.joshi@example.com", "78, Brigade Road, Bangalore, Karnataka", "560001", "vikram_joshi", "Vikram@789"),
+    ("Vikram Joshi", "1995-08-30", "male", "+915555503333", "vikram.joshi@example.com", "78, Brigade Road, Bangalore, Karnataka", "560001", "vikram_joshi", "Vikram$789"),
     ("Sneha Reddy", "1992-02-18", "female", "+915555504444", "sneha.reddy@example.com", "12, Jubilee Hills, Hyderabad, Telangana", "500033", "sneha_reddy", "Sneha#123"),
     ("Amit Kapoor", "1985-12-05", "male", "+915555505555", "amit.kapoor@example.com", "56, Connaught Place, New Delhi", "110001", "amit_kapoor", "Amit!456")
 ]
